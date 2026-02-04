@@ -1,0 +1,126 @@
+:root {
+  --bg-primary: #f6f7fb;
+  --bg-secondary: #eef2ff;
+  --bg-tertiary: #fff;
+  --bg-hover: rgba(59,130,246,0.04);
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-meta: #475569;
+  --text-light: #666;
+  --border-color: #f1f5f9;
+  --border-light: #ddd;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.12);
+  --btn-bg: #111827;
+  --btn-bg-hover: #1f2937;
+  --btn-text: #fff;
+  --accent: #475569;
+  --accent-light: rgba(71, 85, 105, 0.1);
+}
+
+html[data-theme="dark"] {
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #1f1f1f;
+  --bg-hover: rgba(255,255,255,0.08);
+  --text-primary: #e4e4e7;
+  --text-secondary: #a1a1a3;
+  --text-meta: #888;
+  --text-light: #999;
+  --border-color: #2a2a2a;
+  --border-light: #333333;
+  --shadow: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.7);
+  --btn-bg: #e4e4e7;
+  --btn-bg-hover: #d4d4d8;
+  --btn-text: #1a1a1a;
+  --accent: #a1a1a3;
+  --accent-light: rgba(161, 161, 163, 0.1);
+}
+
+* { 
+  box-sizing: border-box; 
+  font-family: Inter, system-ui, Arial, sans-serif; 
+}
+
+html { font-size: 16px; }
+
+body { 
+  margin: 0; 
+  padding: 16px; 
+  background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%); 
+  color: var(--text-primary); 
+  transition: background 0.3s, color 0.3s; 
+  min-height: 100vh;
+}
+
+.app { max-width: 1100px; margin: 0 auto; }
+
+header h1 { margin: 0; font-weight: 700; color: var(--text-primary); font-size: 24px; line-height: 1.2; }
+header p { margin: 4px 0 0; color: var(--text-secondary); font-size: 13px; }
+main { display: grid; grid-template-columns: 1fr 360px; gap: 24px; margin-top: 20px; align-items: start; }
+.search form { display: flex; gap: 8px; flex-wrap: wrap; }
+.results { list-style: none; padding: 0; margin-top: 12px; }
+.results li { display: flex; justify-content: space-between; padding: 10px; background: var(--bg-tertiary); border-radius: 8px; margin-top: 10px; align-items: center; box-shadow: var(--shadow); transition: all 0.2s; color: var(--text-primary); gap: 12px; flex-wrap: wrap; }
+.results li:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.results li .left { display: flex; gap: 12px; align-items: center; flex: 1; min-width: 0; }
+.results img { width: 56px; height: 84px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.results .meta { color: var(--text-meta); font-size: 12px; }
+.wishlist { background: var(--bg-tertiary); padding: 12px; border-radius: 8px; box-shadow: var(--shadow); color: var(--text-primary); }
+.wishlist h2 { margin: 0 0 12px; font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.wishlist ul { list-style: none; padding: 0; margin: 0; }
+.wishlist li { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color); transition: 0.15s; flex-wrap: wrap; gap: 8px; }
+.wishlist li:hover { background: var(--bg-hover); padding: 8px 8px; border-radius: 4px; }
+.wishlist img { width: 60px; height: 90px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+button { background: var(--btn-bg); color: var(--btn-text); border: 0; padding: 10px 14px; border-radius: 6px; cursor: pointer; transition: all 0.15s; font-size: 14px; font-weight: 500; min-height: 44px; min-width: 44px; touch-action: manipulation; }
+button:hover { background: var(--btn-bg-hover); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+button:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.upcoming { margin-bottom: 18px; }
+.upcoming h2 { margin: 0 0 8px; color: var(--text-primary); font-size: 16px; font-weight: 600; }
+.upcoming img { border-radius: 6px; }
+.card { transition: box-shadow 0.18s, transform 0.12s; }
+.card:hover { box-shadow: 0 8px 20px rgba(2,6,23,0.12); transform: translateY(-4px); }
+.skeleton { background: linear-gradient(90deg, var(--bg-secondary) 0%, var(--bg-secondary) 100%); background-size: 200% 100%; animation: skeleton-loading 1.2s linear infinite; border-radius: 6px; }
+@keyframes skeleton-loading { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.results .skeleton-item { display: flex; justify-content: space-between; padding: 10px; background: var(--bg-tertiary); border-radius: 8px; margin-top: 10px; align-items: center; }
+.results .skeleton-left { display: flex; gap: 12px; align-items: center; }
+.skeleton-thumb { width: 56px; height: 84px; border-radius: 6px; }
+.upcoming .skeleton-card { height: 300px; }
+section { background: var(--bg-tertiary); padding: 16px; border-radius: 8px; box-shadow: var(--shadow); margin-top: 24px; color: var(--text-primary); }
+section h2, section h3 { margin: 0 0 12px; color: var(--text-primary); font-size: 16px; font-weight: 600; }
+section > div:first-child { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+section button { padding: 10px 14px; font-size: 13px; }
+input[type="text"], input[type="number"], select, textarea { padding: 10px 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 16px; background: var(--bg-tertiary); color: var(--text-primary); min-height: 44px; -webkit-appearance: none; appearance: none; }
+textarea { min-height: 100px; font-family: inherit; resize: vertical; }
+input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+input[type="file"] { padding: 8px; color: var(--text-primary); }
+
+@media (max-width: 768px) {
+  body { padding: 12px; }
+  header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  header h1 { font-size: 20px; }
+  main { grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+  .wishlist { order: 2; }
+  .search form { flex-direction: column; }
+  .search input, .search select { width: 100%; }
+  .results li { flex-direction: column; align-items: flex-start; }
+  .results li .left { width: 100%; }
+  .results li button { width: 100%; }
+  .wishlist li { flex-direction: column; align-items: flex-start; }
+  section { padding: 12px; margin-top: 16px; }
+  section button { width: 100%; }
+  input[type="text"], input[type="number"], select, textarea { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  body { padding: 8px; }
+  header { flex-direction: column; gap: 8px; }
+  header h1 { font-size: 18px; }
+  header p { font-size: 12px; }
+  main { gap: 12px; }
+  .upcoming h2, .search h2, section h2 { font-size: 15px; }
+  .wishlist { padding: 8px; }
+  button { padding: 8px 12px; font-size: 13px; }
+  .results img, .wishlist img { width: 48px; height: 72px; }
+  section { padding: 10px; }
+}
