@@ -76,7 +76,7 @@ export default function Login({ onSwitch }) {
       boxShadow: 'var(--shadow)'
     }}>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <h1 style={{ margin: 0, fontSize: 32, marginBottom: 8 }}>🎬 culture hub V1.20</h1>
+        <h1 style={{ margin: 0, fontSize: 32, marginBottom: 8 }}>🎬 culture hub V1.21</h1>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: 'var(--text-primary)' }}>
           Connexion
         </h2>

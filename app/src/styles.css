@@ -204,14 +204,15 @@ input[type="file"] { padding: 8px; color: var(--text-primary); }
   main { gap: 16px; margin-top: 16px; }
   .wishlist { order: 2; }
   .search-panel { padding: 12px; border-radius: 12px; }
-  .search-header { align-items: flex-start; margin-bottom: 8px; }
-  .search-header h2 { font-size: 16px; }
-  .search-header p { display: none; }
+  .search-header { align-items: flex-start; margin-bottom: 6px; }
+  .search-header > div { display: none; }
   .search-type { width: 100%; }
-  .search-type button { flex: 1 1 30%; text-align: center; padding: 6px 8px; font-size: 11px; }
-  .search-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .search-type { padding: 4px; gap: 4px; }
+  .search-type button { flex: 1 1 30%; text-align: center; padding: 4px 6px; font-size: 10px; min-height: 28px; }
+  .search-row { flex-direction: column; align-items: stretch; gap: 6px; }
   .search-field, .search-submit { width: 100%; }
-  .search input, .search select { width: 100%; }
+  .search input, .search select { width: 100%; min-height: 36px; padding: 8px 10px; font-size: 13px; }
+  .search-submit { min-height: 36px; padding: 8px 10px; font-size: 13px; }
   .results li { flex-direction: column; align-items: stretch; }
   .results li .left { width: 100%; }
   .results li button { width: 100%; }

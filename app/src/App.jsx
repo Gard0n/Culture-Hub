@@ -21,6 +21,8 @@ import ProfilePanel from './components/ProfilePanel'
 import FriendsPanel from './components/FriendsPanel'
 import { fetchTMDBDetails } from './api/tmdb'
 
+const CREATOR_REFRESH_KEY = 'ch_creator_refresh'
+
 const BASE_COLLECTIONS = [
   { id: 'default', label: 'Sans collection' },
   { id: 'À regarder', label: 'À regarder' },
@@ -477,9 +479,27 @@ export default function App(){
         return updates.has(key) ? { ...i, creator: updates.get(key) } : i
       }))
     }
+    try {
+      localStorage.setItem(CREATOR_REFRESH_KEY, String(Date.now()))
+    } catch {}
     setRefreshingCreators(false)
     setTimeout(() => setRefreshProgress({ total: 0, done: 0 }), 1600)
   }
+
+  useEffect(() => {
+    if (isPublicView) return
+    if (!wishlistLoaded) return
+    const dayMs = 24 * 60 * 60 * 1000
+    const maybeRefresh = () => {
+      if (refreshingCreators) return
+      const last = parseInt(localStorage.getItem(CREATOR_REFRESH_KEY) || '0', 10)
+      if (Number.isFinite(last) && Date.now() - last < dayMs) return
+      refreshCreators()
+    }
+    maybeRefresh()
+    const timer = setInterval(maybeRefresh, 60 * 60 * 1000)
+    return () => clearInterval(timer)
+  }, [isPublicView, wishlistLoaded, wishlist.length, refreshingCreators])
 
   // Si l'utilisateur n'est pas connecté et qu'on n'est pas en vue publique, afficher Login/Register
   if (!currentUser && !isPublicView) {
@@ -493,7 +513,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.20</h1>
+            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.21</h1>
             <p style={{margin:'4px 0 0',fontSize:12,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -629,10 +649,7 @@ export default function App(){
                   <h3>🎬 Réalisateurs & auteurs</h3>
                   <small>{creatorTargetsCount} total • {missingCreatorsCount} manquant{missingCreatorsCount > 1 ? 's' : ''}</small>
                 </div>
-                <small>Actualise tous les réalisateurs (films/séries) et auteurs (livres).</small>
-                <button onClick={refreshCreators} disabled={refreshingCreators || creatorTargetsCount === 0}>
-                  {refreshingCreators ? 'Mise à jour…' : 'Actualiser tout'}
-                </button>
+                <small>Actualisation automatique toutes les 24h (sans action).</small>
                 {refreshProgress.total > 0 && (
                   <div className="creator-refresh-progress">
                     Mise à jour {refreshProgress.done}/{refreshProgress.total}
