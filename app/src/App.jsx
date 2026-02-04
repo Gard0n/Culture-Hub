@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore'
 import { useAuth } from './contexts/AuthContext'
 import { db } from './lib/firebase'
 import Login from './components/Login'
@@ -17,6 +17,9 @@ import WishlistFilters from './components/WishlistFilters'
 import CollectionManager from './components/CollectionManager'
 import Recommendations from './components/Recommendations'
 import PublicWishlistView from './components/PublicWishlistView'
+import PublicProfileView from './components/PublicProfileView'
+import ProfilePanel from './components/ProfilePanel'
+import FriendsPanel from './components/FriendsPanel'
 
 const BASE_COLLECTIONS = [
   { id: 'default', label: 'Sans collection' },
@@ -51,6 +54,11 @@ export default function App(){
   const [wishlistLoaded, setWishlistLoaded] = useState(false)
   const [publicLoading, setPublicLoading] = useState(false)
   const [publicError, setPublicError] = useState('')
+  const [publicProfileLoading, setPublicProfileLoading] = useState(false)
+  const [publicProfileError, setPublicProfileError] = useState('')
+  const [publicProfile, setPublicProfile] = useState(null)
+  const [publicProfileWishlist, setPublicProfileWishlist] = useState([])
+  const [userProfile, setUserProfile] = useState(null)
 
   const initialHash = window.location.hash || ''
   const [hash, setHash] = useState(() => initialHash)
@@ -109,9 +117,12 @@ export default function App(){
   const hashParams = new URLSearchParams((hash || '').replace(/^#/, ''))
   const listParam = hashParams.get('list')
   const publicParam = hashParams.get('public')
+  const profileParam = hashParams.get('profile')
 
   // Vérifier si on affiche une wishlist publique
-  const isPublicView = Boolean(listParam || publicParam)
+  const isPublicView = Boolean(listParam || publicParam || profileParam)
+  const showPublicListView = Boolean(listParam || publicParam)
+  const showPublicProfileView = Boolean(profileParam)
 
   useEffect(() => {
     if (!listParam) return
@@ -156,6 +167,54 @@ export default function App(){
     loadPublicWishlist()
     return () => { cancelled = true }
   }, [publicParam])
+
+  useEffect(() => {
+    if (!profileParam) {
+      setPublicProfile(null)
+      setPublicProfileWishlist([])
+      setPublicProfileError('')
+      setPublicProfileLoading(false)
+      return
+    }
+    let cancelled = false
+    async function loadProfile() {
+      setPublicProfileLoading(true)
+      setPublicProfileError('')
+      try {
+        const profileRef = doc(db, 'users', profileParam)
+        const profileSnap = await getDoc(profileRef)
+        if (cancelled) return
+        if (!profileSnap.exists()) {
+          setPublicProfileError('Profil introuvable')
+          setPublicProfile(null)
+          setPublicProfileWishlist([])
+          return
+        }
+        const data = profileSnap.data()
+        const isOwner = currentUser && currentUser.uid === profileParam
+        if (!data.publicProfile && !isOwner) {
+          setPublicProfileError('Profil privé')
+          setPublicProfile(null)
+          setPublicProfileWishlist([])
+          return
+        }
+        setPublicProfile({ id: profileParam, ...data })
+
+        const wlRef = doc(db, 'public_wishlists', profileParam)
+        const wlSnap = await getDoc(wlRef)
+        const items = wlSnap.exists() && Array.isArray(wlSnap.data().items) ? wlSnap.data().items : []
+        setPublicProfileWishlist(items)
+      } catch (error) {
+        console.error('Erreur chargement profil public', error)
+        setPublicProfileError('Erreur lors du chargement')
+      } finally {
+        if (!cancelled) setPublicProfileLoading(false)
+      }
+    }
+
+    loadProfile()
+    return () => { cancelled = true }
+  }, [profileParam, currentUser])
 
   useEffect(()=>{
     if (isPublicView) return
@@ -218,6 +277,18 @@ export default function App(){
     return () => clearTimeout(timeout)
   }, [wishlist, currentUser, isPublicView, wishlistLoaded])
 
+  useEffect(() => {
+    if (!currentUser || isPublicView) {
+      setUserProfile(null)
+      return
+    }
+    const profileRef = doc(db, 'users', currentUser.uid)
+    const unsubscribe = onSnapshot(profileRef, (snap) => {
+      if (snap.exists()) setUserProfile({ id: snap.id, ...snap.data() })
+    })
+    return () => unsubscribe()
+  }, [currentUser, isPublicView])
+
   async function publishPublicWishlist() {
     if (!currentUser) return
     const ownerName = currentUser.displayName || currentUser.email?.split('@')[0] || 'Utilisateur'
@@ -245,6 +316,10 @@ export default function App(){
   const publicShareUrl = currentUser
     ? `${window.location.origin}${window.location.pathname}#public=${currentUser.uid}`
     : ''
+
+  const profileLinkHandler = (userId) => {
+    window.location.hash = `profile=${userId}`
+  }
 
   function addToWishlist(item){
     if(!wishlist.find(i=>i.id===item.id && i.type===item.type)){
@@ -284,7 +359,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.10</h1>
+            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.11</h1>
             <p style={{margin:'4px 0 0',fontSize:14,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -315,10 +390,10 @@ export default function App(){
                     fontSize: 12,
                     fontWeight: 600
                   }}>
-                    {getUserInitials(currentUser)}
+                    {getUserInitials(userProfile ? { ...currentUser, displayName: userProfile.displayName } : currentUser)}
                   </div>
                   <span style={{ fontSize: 13, fontWeight: 500 }}>
-                    {currentUser.displayName || currentUser.email.split('@')[0]}
+                    {(userProfile && userProfile.displayName) || currentUser.displayName || currentUser.email.split('@')[0]}
                   </span>
                 </div>
                 <button
@@ -392,6 +467,12 @@ export default function App(){
               )}
             </section>
           )}
+          {!isPublicView && currentUser && (
+            <>
+              <ProfilePanel currentUser={currentUser} profile={userProfile} />
+              <FriendsPanel currentUser={currentUser} onOpenProfile={profileLinkHandler} />
+            </>
+          )}
         </div>
       </main>
 
@@ -405,11 +486,21 @@ export default function App(){
         />
       )}
 
-      {isPublicView && (
+      {showPublicListView && (
         <PublicWishlistView
           wishlist={wishlist}
           loading={publicLoading}
           error={publicError}
+          onClose={() => window.location.hash = ''}
+        />
+      )}
+
+      {showPublicProfileView && (
+        <PublicProfileView
+          profile={publicProfile}
+          wishlist={publicProfileWishlist}
+          loading={publicProfileLoading}
+          error={publicProfileError}
           onClose={() => window.location.hash = ''}
         />
       )}
