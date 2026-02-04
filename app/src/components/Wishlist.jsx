@@ -1,10 +1,18 @@
 import React, { useState } from 'react'
 import { posterUrl } from '../api/tmdb'
 
-export default function Wishlist({items,onRemove,onSelect,onUpdateNote,onUpdateCollection,isPublic}){
+export default function Wishlist({items,onRemove,onSelect,onUpdateNote,onUpdateCollection,isPublic,collections = []}){
   const [editingItem, setEditingItem] = useState(null)
   const [editRating, setEditRating] = useState(0)
   const [editNote, setEditNote] = useState('')
+
+  const collectionMap = new Map((collections || []).map(c => [c.id, c.label]))
+  const resolveCollectionLabel = (value) => {
+    if (!value || value === 'default') {
+      return collectionMap.get('default') || 'Sans collection'
+    }
+    return collectionMap.get(value) || value
+  }
 
   if(!items.length) return <aside className="wishlist"><h2>Wishlist</h2><p>Vide pour l'instant</p></aside>
 
@@ -36,12 +44,33 @@ export default function Wishlist({items,onRemove,onSelect,onUpdateNote,onUpdateC
               <div style={{flex:1}}>
                 <strong style={{display:'block',color:'var(--text-primary)'}}>{i.title}</strong>
                 <small style={{color:'var(--text-light)'}}>{i.year}</small>
-                {i.collection && !isPublic && <div style={{fontSize:10,color:'var(--accent)',marginTop:4}}>📁 {i.collection}</div>}
+                {!isPublic && (
+                  <div style={{fontSize:10,color:'var(--accent)',marginTop:4}}>
+                    📁 {resolveCollectionLabel(i.collection || 'default')}
+                  </div>
+                )}
                 {i.rating && <div style={{fontSize:12,marginTop:4}}>{'⭐'.repeat(i.rating)}</div>}
                 {i.note && <div style={{fontSize:11,color:'var(--text-light)',marginTop:4,fontStyle:'italic'}}>{i.note.substring(0,30)}{i.note.length > 30 ? '...' : ''}</div>}
               </div>
             </div>
             <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              {!isPublic && onUpdateCollection && collections.length > 0 && (
+                <select
+                  aria-label={`Changer collection ${i.title}`}
+                  value={i.collection || 'default'}
+                  onChange={(e) => onUpdateCollection(i.id, i.type, e.target.value)}
+                  style={{ fontSize: 12, padding: '4px 8px' }}
+                >
+                  {collections.map(c => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
+                  ))}
+                  {!collectionMap.has(i.collection || 'default') && (
+                    <option value={i.collection || 'default'}>
+                      {resolveCollectionLabel(i.collection || 'default')}
+                    </option>
+                  )}
+                </select>
+              )}
               <button aria-label={`Voir détails ${i.title}`} onClick={()=>onSelect && onSelect(i)} style={{fontSize:12,padding:'4px 8px'}}>Détails</button>
               {!isPublic && <button aria-label={`Éditer note ${i.title}`} onClick={() => openEditor(i)} style={{fontSize:12,padding:'4px 8px'}}>✏️</button>}
               {!isPublic && <button aria-label={`Supprimer ${i.title}`} onClick={()=>onRemove(i.id,i.type)} style={{fontSize:12,padding:'4px 8px',marginLeft:0}}>Supprimer</button>}

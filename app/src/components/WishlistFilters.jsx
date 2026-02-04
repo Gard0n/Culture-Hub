@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-export default function WishlistFilters({ wishlist, onFilter }) {
+export default function WishlistFilters({ wishlist, onFilter, selectedCollection }) {
   const [searchText, setSearchText] = useState('')
   const [filterType, setFilterType] = useState('')
   const [filterYear, setFilterYear] = useState('')
@@ -10,6 +10,9 @@ export default function WishlistFilters({ wishlist, onFilter }) {
 
   function applyFilters() {
     let filtered = wishlist
+    if (selectedCollection) {
+      filtered = filtered.filter(i => (i.collection || 'default') === selectedCollection)
+    }
     if (searchText) {
       filtered = filtered.filter(i => 
         (i.title?.toLowerCase().includes(searchText.toLowerCase())) ||
@@ -26,7 +29,7 @@ export default function WishlistFilters({ wishlist, onFilter }) {
   }
 
   // Auto-apply filters when inputs change
-  React.useEffect(applyFilters, [searchText, filterType, filterYear, wishlist])
+  React.useEffect(applyFilters, [searchText, filterType, filterYear, wishlist, selectedCollection])
 
   return (
     <div style={{ padding: 12, background: 'var(--bg-secondary)', borderRadius: 8, marginBottom: 12 }}>

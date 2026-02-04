@@ -150,7 +150,7 @@ export default function PublicWishlistView({ wishlist, onClose }) {
           color: 'var(--text-light)',
           background: 'var(--bg-secondary)'
         }}>
-          ✨ Wishlist créée avec Culture Hub • Crée la tienne avec <strong>culture-hub.app</strong>
+          ✨ Wishlist créée avec culture hub V1.06 • Crée la tienne avec <strong>culture-hub.app</strong>
         </div>
       </div>
     </div>

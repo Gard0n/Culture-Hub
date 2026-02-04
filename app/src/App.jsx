@@ -18,6 +18,33 @@ import CollectionManager from './components/CollectionManager'
 import Recommendations from './components/Recommendations'
 import PublicWishlistView from './components/PublicWishlistView'
 
+const BASE_COLLECTIONS = [
+  { id: 'default', label: 'Sans collection' },
+  { id: 'À regarder', label: 'À regarder' },
+  { id: 'À lire', label: 'À lire' },
+  { id: 'En cours', label: 'En cours' },
+  { id: 'Terminé', label: 'Terminé' },
+  { id: 'Favori', label: 'Favori' }
+]
+
+function buildCollectionOptions(customCollections) {
+  const seen = new Set()
+  BASE_COLLECTIONS.forEach((c) => {
+    seen.add(c.id.toLowerCase())
+    seen.add(c.label.toLowerCase())
+  })
+  const extras = []
+  ;(customCollections || []).forEach((name) => {
+    const trimmed = (name || '').trim()
+    if (!trimmed) return
+    const key = trimmed.toLowerCase()
+    if (seen.has(key)) return
+    seen.add(key)
+    extras.push({ id: trimmed, label: trimmed })
+  })
+  return [...BASE_COLLECTIONS, ...extras]
+}
+
 export default function App(){
   const { currentUser, logout, getUserInitials } = useAuth()
   const [showRegister, setShowRegister] = useState(false)
@@ -39,6 +66,20 @@ export default function App(){
     }
   }
 
+  function readCustomCollections() {
+    try {
+      const raw = localStorage.getItem('ch_collections') || '[]'
+      const parsed = JSON.parse(raw)
+      if (!Array.isArray(parsed)) return []
+      return parsed
+        .filter(c => typeof c === 'string')
+        .map(c => c.trim())
+        .filter(Boolean)
+    } catch {
+      return []
+    }
+  }
+
   const [wishlist, setWishlist] = useState(() => {
     const hash = window.location.hash.slice(1)
     const params = new URLSearchParams(hash)
@@ -49,6 +90,7 @@ export default function App(){
     }
     return readLocalWishlist()
   })
+  const [customCollections, setCustomCollections] = useState(() => readCustomCollections())
   const [selectedMedia, setSelectedMedia] = useState(null)
   const [filteredWishlist, setFilteredWishlist] = useState(wishlist)
   const [showPublicView, setShowPublicView] = useState(false)
@@ -62,6 +104,11 @@ export default function App(){
     localStorage.setItem('ch_wishlist', JSON.stringify(wishlist))
     setFilteredWishlist(wishlist)
   },[wishlist, isPublicView])
+
+  useEffect(() => {
+    if (isPublicView) return
+    localStorage.setItem('ch_collections', JSON.stringify(customCollections))
+  }, [customCollections, isPublicView])
 
   useEffect(() => {
     let cancelled = false
@@ -113,6 +160,20 @@ export default function App(){
     return () => clearTimeout(timeout)
   }, [wishlist, currentUser, isPublicView, wishlistLoaded])
 
+  function handleAddCollection(name) {
+    const trimmed = (name || '').trim()
+    if (!trimmed) return
+    const current = buildCollectionOptions(customCollections)
+    const exists = current.some(c =>
+      c.id.toLowerCase() === trimmed.toLowerCase() ||
+      c.label.toLowerCase() === trimmed.toLowerCase()
+    )
+    if (exists) return
+    setCustomCollections(prev => [...prev, trimmed])
+  }
+
+  const collectionOptions = buildCollectionOptions(customCollections)
+
   function addToWishlist(item){
     if(!wishlist.find(i=>i.id===item.id && i.type===item.type)){
       setWishlist([{...item, collection: selectedCollection || 'default'}, ...wishlist])
@@ -151,7 +212,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 Culture Hub</h1>
+            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.06</h1>
             <p style={{margin:'4px 0 0',fontSize:14,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -225,9 +286,25 @@ export default function App(){
           )}
         </div>
         <div>
-          {!isPublicView && <WishlistFilters wishlist={wishlist} onFilter={setFilteredWishlist} />}
-          {!isPublicView && <CollectionManager wishlist={wishlist} selectedCollection={selectedCollection} onSelectCollection={setSelectedCollection} />}
-          <Wishlist items={isPublicView ? wishlist : filteredWishlist} onRemove={isPublicView ? null : removeFromWishlist} onSelect={setSelectedMedia} onUpdateNote={updateItemNote} onUpdateCollection={updateItemCollection} isPublic={isPublicView} />
+          {!isPublicView && <WishlistFilters wishlist={wishlist} onFilter={setFilteredWishlist} selectedCollection={selectedCollection} />}
+          {!isPublicView && (
+            <CollectionManager
+              wishlist={wishlist}
+              selectedCollection={selectedCollection}
+              onSelectCollection={setSelectedCollection}
+              collections={collectionOptions}
+              onAddCollection={handleAddCollection}
+            />
+          )}
+          <Wishlist
+            items={isPublicView ? wishlist : filteredWishlist}
+            onRemove={isPublicView ? null : removeFromWishlist}
+            onSelect={setSelectedMedia}
+            onUpdateNote={updateItemNote}
+            onUpdateCollection={updateItemCollection}
+            isPublic={isPublicView}
+            collections={collectionOptions}
+          />
           <Stats wishlist={isPublicView ? wishlist : filteredWishlist} />
           {!isPublicView && <Recommendations wishlist={wishlist} onAdd={addToWishlist} onSelect={setSelectedMedia} />}
           {!isPublicView && (

@@ -1,15 +1,32 @@
 import React, { useState } from 'react'
 
-const DEFAULT_COLLECTIONS = ['À regarder', 'À lire', 'En cours', 'Terminé', 'Favori']
-
-export default function CollectionManager({ wishlist, selectedCollection, onSelectCollection }) {
+export default function CollectionManager({ wishlist, selectedCollection, onSelectCollection, collections = [], onAddCollection }) {
   const [showNew, setShowNew] = useState(false)
   const [newCollectionName, setNewCollectionName] = useState('')
+  const [error, setError] = useState('')
 
-  const itemsByCollection = DEFAULT_COLLECTIONS.reduce((acc, col) => {
-    acc[col] = wishlist.filter(i => (i.collection || 'default') === col).length
+  const itemsByCollection = collections.reduce((acc, col) => {
+    acc[col.id] = wishlist.filter(i => (i.collection || 'default') === col.id).length
     return acc
   }, {})
+
+  function handleCreate() {
+    const trimmed = newCollectionName.trim()
+    if (!trimmed) return
+    const exists = collections.some(c =>
+      c.id.toLowerCase() === trimmed.toLowerCase() ||
+      c.label.toLowerCase() === trimmed.toLowerCase()
+    )
+    if (exists) {
+      setError('Collection déjà existante')
+      return
+    }
+    onAddCollection && onAddCollection(trimmed)
+    onSelectCollection && onSelectCollection(trimmed)
+    setNewCollectionName('')
+    setShowNew(false)
+    setError('')
+  }
 
   return (
     <section style={{ 
@@ -39,15 +56,15 @@ export default function CollectionManager({ wishlist, selectedCollection, onSele
           📊 Toutes ({wishlist.length})
         </button>
 
-        {DEFAULT_COLLECTIONS.map(col => (
+        {collections.map(col => (
           <button
-            key={col}
-            onClick={() => onSelectCollection(col)}
+            key={col.id}
+            onClick={() => onSelectCollection(col.id)}
             style={{
               padding: '6px 12px',
               borderRadius: 20,
-              border: selectedCollection === col ? '2px solid var(--accent)' : '1px solid var(--border-color)',
-              background: selectedCollection === col ? 'var(--accent-light)' : 'var(--bg-tertiary)',
+              border: selectedCollection === col.id ? '2px solid var(--accent)' : '1px solid var(--border-color)',
+              background: selectedCollection === col.id ? 'var(--accent-light)' : 'var(--bg-tertiary)',
               color: 'var(--text-primary)',
               cursor: 'pointer',
               fontSize: 12,
@@ -55,12 +72,16 @@ export default function CollectionManager({ wishlist, selectedCollection, onSele
               transition: 'all 0.2s'
             }}
           >
-            {col} ({itemsByCollection[col] || 0})
+            {col.label} ({itemsByCollection[col.id] || 0})
           </button>
         ))}
 
         <button 
-          onClick={() => setShowNew(!showNew)}
+          onClick={() => {
+            setShowNew(!showNew)
+            setError('')
+            if (showNew) setNewCollectionName('')
+          }}
           style={{
             padding: '6px 12px',
             borderRadius: 20,
@@ -77,11 +98,11 @@ export default function CollectionManager({ wishlist, selectedCollection, onSele
       </div>
 
       {showNew && (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <input
             type="text"
             value={newCollectionName}
-            onChange={(e) => setNewCollectionName(e.target.value)}
+            onChange={(e) => { setNewCollectionName(e.target.value); setError('') }}
             placeholder="Nom de la collection..."
             style={{
               padding: '6px 8px',
@@ -93,18 +114,27 @@ export default function CollectionManager({ wishlist, selectedCollection, onSele
               fontSize: 12
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && newCollectionName.trim()) {
-                // Ajouter la collection au localStorage
-                const collections = JSON.parse(localStorage.getItem('ch_collections') || '[]')
-                if (!collections.includes(newCollectionName)) {
-                  collections.push(newCollectionName)
-                  localStorage.setItem('ch_collections', JSON.stringify(collections))
-                }
-                setNewCollectionName('')
-                setShowNew(false)
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleCreate()
               }
             }}
           />
+          <button 
+            onClick={handleCreate}
+            style={{
+              padding: '6px 10px',
+              borderRadius: 4,
+              border: 'none',
+              background: 'var(--accent)',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: 600
+            }}
+          >
+            Ajouter
+          </button>
           <button 
             onClick={() => setShowNew(false)}
             style={{
@@ -119,6 +149,7 @@ export default function CollectionManager({ wishlist, selectedCollection, onSele
           >
             ✕
           </button>
+          {error && <span style={{ fontSize: 12, color: '#dc2626' }}>{error}</span>}
         </div>
       )}
     </section>
