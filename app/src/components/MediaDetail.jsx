@@ -1,11 +1,12 @@
 import React, {useState, useEffect} from 'react'
 import { fetchTMDBDetails, posterUrl } from '../api/tmdb'
 
-export default function MediaDetail({media, onClose, onAdd}){
+export default function MediaDetail({media, onClose, onAdd, onUpdateNote, existingItem}){
   const [details, setDetails] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [rating, setRating] = useState('')
-  const [review, setReview] = useState('')
+  const [rating, setRating] = useState(existingItem?.rating || 0)
+  const [note, setNote] = useState(existingItem?.note || '')
+  const [saved, setSaved] = useState(false)
 
   useEffect(()=>{
     let mounted = true
@@ -30,15 +31,32 @@ export default function MediaDetail({media, onClose, onAdd}){
     return ()=>{ mounted = false }
   },[media])
 
-  function saveLocalReview(){
-    try{
-      const key = 'ch_reviews'
-      const cur = JSON.parse(localStorage.getItem(key)||'{}')
-      const id = `${media.type}-${media.id}`
-      cur[id] = { rating, review, updatedAt: new Date().toISOString(), title: media.title }
-      localStorage.setItem(key, JSON.stringify(cur))
-      alert('Review saved locally')
-    }catch(e){ console.error(e) }
+  useEffect(() => {
+    setRating(existingItem?.rating || 0)
+    setNote(existingItem?.note || '')
+  }, [existingItem, media?.id, media?.type])
+
+  const poster = details?.poster_path || details?.poster || media.poster
+  const baseItem = {
+    id: media.id,
+    type: media.type,
+    title: media.title || media.name,
+    year: (media.year || media.release_date || '').slice(0,4),
+    poster
+  }
+  const isInWishlist = Boolean(existingItem)
+
+  function handleSaveReview() {
+    const payload = { rating, note }
+    if (isInWishlist) {
+      onUpdateNote && onUpdateNote(existingItem.id, existingItem.type, payload)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 1500)
+      return
+    }
+    if (onAdd) {
+      onAdd({ ...baseItem, ...payload })
+    }
   }
 
   return (
@@ -49,8 +67,8 @@ export default function MediaDetail({media, onClose, onAdd}){
         {details && (
           <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
             <div style={{width:200}}>
-              {details.poster_path || details.poster ? (
-                <img src={posterUrl(details.poster_path || details.poster)} alt="poster" style={{width:'100%',borderRadius:8,transition:'transform .2s'}} />
+              {poster ? (
+                <img src={posterUrl(poster)} alt="poster" style={{width:'100%',borderRadius:8,transition:'transform .2s'}} />
               ) : null}
             </div>
             <div style={{flex:1,minWidth:260}}>
@@ -81,20 +99,45 @@ export default function MediaDetail({media, onClose, onAdd}){
                 </div>
               )}
 
-              <div style={{marginTop:12}}>
-                <button onClick={()=>onAdd && onAdd({ id: media.id, type: media.type, title: media.title || media.name, year: (media.year||media.release_date||'').slice(0,4), poster: details.poster_path || details.poster })}>Ajouter à la wishlist</button>
+              <div style={{marginTop:12, display:'flex', gap:12, alignItems:'center', flexWrap:'wrap'}}>
+                {isInWishlist ? (
+                  <span style={{fontSize:12,color:'var(--text-light)'}}>Déjà dans la wishlist</span>
+                ) : (
+                  <button onClick={()=>onAdd && onAdd(baseItem)}>Ajouter à la wishlist</button>
+                )}
               </div>
 
               <div style={{marginTop:16}}>
                 <h4 style={{color:'var(--text-primary)'}}>Votre note et mini-review</h4>
-                <div style={{color:'var(--text-primary)'}}>
-                  <label>Note (1-5): <input value={rating} onChange={e=>setRating(e.target.value)} style={{width:60}}/></label>
+                <div style={{color:'var(--text-primary)', marginBottom: 8}}>
+                  <label style={{display:'block', marginBottom:6}}>Note (1-5)</label>
+                  <div style={{display:'flex', gap:8}}>
+                    {[1,2,3,4,5].map(r => (
+                      <button
+                        key={r}
+                        onClick={() => setRating(r)}
+                        style={{
+                          fontSize: 20,
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          opacity: r <= rating ? 1 : 0.3
+                        }}
+                        aria-label={`Note ${r}`}
+                      >
+                        ⭐
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
-                  <textarea value={review} onChange={e=>setReview(e.target.value)} rows={4} style={{width:'100%',background:'var(--bg-secondary)',color:'var(--text-primary)',border:'1px solid var(--border-light)',borderRadius:4,padding:8,fontFamily:'inherit'}} placeholder="Petit commentaire..."></textarea>
+                  <textarea value={note} onChange={e=>setNote(e.target.value)} rows={4} style={{width:'100%',background:'var(--bg-secondary)',color:'var(--text-primary)',border:'1px solid var(--border-light)',borderRadius:4,padding:8,fontFamily:'inherit'}} placeholder="Petit commentaire..."></textarea>
                 </div>
-                <div style={{marginTop:8}}>
-                  <button onClick={saveLocalReview}>Enregistrer localement</button>
+                <div style={{marginTop:8, display:'flex', alignItems:'center', gap:8}}>
+                  <button onClick={handleSaveReview}>
+                    {isInWishlist ? 'Sauvegarder' : 'Ajouter + sauvegarder'}
+                  </button>
+                  {saved && <span style={{fontSize:12,color:'#16a34a'}}>Sauvegardé</span>}
                 </div>
               </div>
             </div>

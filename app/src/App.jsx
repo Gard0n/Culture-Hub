@@ -284,7 +284,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.07</h1>
+            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.08</h1>
             <p style={{margin:'4px 0 0',fontSize:14,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -398,8 +398,10 @@ export default function App(){
       {selectedMedia && !isPublicView && (
         <MediaDetail
           media={selectedMedia}
+          existingItem={wishlist.find(i => i.id === selectedMedia.id && i.type === selectedMedia.type)}
           onClose={() => setSelectedMedia(null)}
           onAdd={(item)=>{ addToWishlist(item); setSelectedMedia(null) }}
+          onUpdateNote={updateItemNote}
         />
       )}
 
