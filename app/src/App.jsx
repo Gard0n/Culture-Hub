@@ -425,6 +425,11 @@ export default function App(){
     ))
   }
 
+  const creatorTargets = wishlist.filter(i => {
+    if (i.type === 'book') return i.authors?.length
+    return true
+  })
+  const creatorTargetsCount = creatorTargets.length
   const missingCreatorsCount = wishlist.filter(i => {
     if (i.type === 'book') return !i.creator && i.authors?.length
     return !i.creator
@@ -432,10 +437,7 @@ export default function App(){
 
   async function refreshCreators() {
     if (refreshingCreators) return
-    const targets = wishlist.filter(i => {
-      if (i.type === 'book') return !i.creator && i.authors?.length
-      return !i.creator
-    })
+    const targets = creatorTargets
     if (targets.length === 0) {
       setRefreshNote('Rien à mettre à jour.')
       return
@@ -491,7 +493,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.19</h1>
+            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.20</h1>
             <p style={{margin:'4px 0 0',fontSize:12,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -625,11 +627,11 @@ export default function App(){
               <div className="creator-refresh">
                 <div className="creator-refresh-head">
                   <h3>🎬 Réalisateurs & auteurs</h3>
-                  <small>{missingCreatorsCount} manquant{missingCreatorsCount > 1 ? 's' : ''}</small>
+                  <small>{creatorTargetsCount} total • {missingCreatorsCount} manquant{missingCreatorsCount > 1 ? 's' : ''}</small>
                 </div>
-                <small>Met à jour les réalisateurs des films/séries et les auteurs des livres déjà en wishlist.</small>
-                <button onClick={refreshCreators} disabled={refreshingCreators || missingCreatorsCount === 0}>
-                  {refreshingCreators ? 'Mise à jour…' : 'Actualiser'}
+                <small>Actualise tous les réalisateurs (films/séries) et auteurs (livres).</small>
+                <button onClick={refreshCreators} disabled={refreshingCreators || creatorTargetsCount === 0}>
+                  {refreshingCreators ? 'Mise à jour…' : 'Actualiser tout'}
                 </button>
                 {refreshProgress.total > 0 && (
                   <div className="creator-refresh-progress">

@@ -11,7 +11,6 @@ export default function Search({onAdd, onSelect}){
   const [error,setError] = useState('')
   const [genres, setGenres] = useState({})
   const [selectedGenre, setSelectedGenre] = useState('')
-  const [year, setYear] = useState('')
   const apiKey = import.meta.env.VITE_TMDB_API_KEY || ''
   const lang = import.meta.env.VITE_TMDB_LANGUAGE || 'fr-FR'
 
@@ -19,7 +18,6 @@ export default function Search({onAdd, onSelect}){
     setType(nextType)
     setResults([])
     setSelectedGenre('')
-    setYear('')
   }
 
   useEffect(()=>{
@@ -59,10 +57,6 @@ export default function Search({onAdd, onSelect}){
           return
         }
         const extra = { language: lang }
-        if(year){
-          if(type==='movie') extra.year = year
-          if(type==='tv') extra.first_air_date_year = year
-        }
         const r = await searchTMDB(q,type,apiKey,pageArg, extra)
         const mapped = (r.results||[]).map(item=>({
           id: item.id,
@@ -125,9 +119,6 @@ export default function Search({onAdd, onSelect}){
             <div className="search-field search-grow">
               <input placeholder="Rechercher un titre, un auteur..." value={q} onChange={e=>setQ(e.target.value)} />
             </div>
-            <div className="search-field">
-              <input placeholder="Année (ex: 2024)" value={year} onChange={e=>setYear(e.target.value)} />
-            </div>
             {type!=='book' && (
               <div className="search-field">
                 <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)}>
@@ -173,7 +164,6 @@ export default function Search({onAdd, onSelect}){
                     )}
                     <div className="result-info">
                       <strong style={{cursor:'pointer',display:'block',color:'var(--text-primary)'}} onClick={()=>onSelect && onSelect(r)}>{r.title}</strong>
-                      <small style={{color:'var(--text-light)'}}>{r.year ? `(${r.year})` : ''}</small>
                       <div className="meta">{r.authors ? r.authors.join(', ') : ''}</div>
                     </div>
                   </div>

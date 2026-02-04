@@ -203,10 +203,13 @@ input[type="file"] { padding: 8px; color: var(--text-primary); }
   header h1 { font-size: 22px; }
   main { gap: 16px; margin-top: 16px; }
   .wishlist { order: 2; }
-  .search-header { align-items: flex-start; }
+  .search-panel { padding: 12px; border-radius: 12px; }
+  .search-header { align-items: flex-start; margin-bottom: 8px; }
+  .search-header h2 { font-size: 16px; }
+  .search-header p { display: none; }
   .search-type { width: 100%; }
-  .search-type button { flex: 1 1 30%; text-align: center; }
-  .search-row { flex-direction: column; align-items: stretch; }
+  .search-type button { flex: 1 1 30%; text-align: center; padding: 6px 8px; font-size: 11px; }
+  .search-row { flex-direction: column; align-items: stretch; gap: 8px; }
   .search-field, .search-submit { width: 100%; }
   .search input, .search select { width: 100%; }
   .results li { flex-direction: column; align-items: stretch; }
