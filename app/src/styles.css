@@ -201,8 +201,8 @@ input[type="file"] { padding: 8px; color: var(--text-primary); }
   main { gap: 16px; margin-top: 16px; }
   .wishlist { order: 2; }
   .search-panel { padding: 10px; border-radius: 12px; gap: 8px; }
-  .search-input { gap: 6px; }
-  .search-submit { padding: 6px 10px; font-size: 12px; min-height: 34px; }
+  .search-input { gap: 6px; flex-direction: column; }
+  .search-submit { padding: 8px 12px; font-size: 13px; min-height: 40px; width: 100%; }
   .search-toolbar { gap: 6px; }
   .search-type-select { min-width: 0; flex: 1; }
   .search-genre { width: 100%; }
@@ -210,7 +210,7 @@ input[type="file"] { padding: 8px; color: var(--text-primary); }
   .search-filters-toggle { padding: 6px 10px; font-size: 11px; min-height: 30px; }
   .only-mobile { display: flex; }
   .only-desktop { display: none; }
-  .search input, .search select { width: 100%; min-height: 34px; padding: 7px 10px; font-size: 13px; }
+  .search input, .search select { width: 100%; min-height: 44px; padding: 10px 12px; font-size: 14px; }
   .results li { flex-direction: column; align-items: stretch; }
   .results li .left { width: 100%; }
   .results li button { width: 100%; }
