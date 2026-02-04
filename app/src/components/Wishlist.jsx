@@ -43,7 +43,9 @@ export default function Wishlist({items,onRemove,onSelect,onUpdateNote,onUpdateC
               )}
               <div style={{flex:1}}>
                 <strong style={{display:'block',color:'var(--text-primary)'}}>{i.title}</strong>
-                <small style={{color:'var(--text-light)'}}>{i.year}</small>
+                <small style={{color:'var(--text-light)'}}>
+                  {i.creator || (i.type === 'book' ? (i.authors?.[0] || 'Auteur inconnu') : 'Réalisateur inconnu')}
+                </small>
                 {!isPublic && (
                   <div style={{fontSize:10,color:'var(--accent)',marginTop:4}}>
                     📁 {resolveCollectionLabel(i.collection || 'default')}
@@ -53,7 +55,7 @@ export default function Wishlist({items,onRemove,onSelect,onUpdateNote,onUpdateC
                 {i.note && <div style={{fontSize:11,color:'var(--text-light)',marginTop:4,fontStyle:'italic'}}>{i.note.substring(0,30)}{i.note.length > 30 ? '...' : ''}</div>}
               </div>
             </div>
-            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+            <div className="wishlist-actions" style={{display:'flex',gap:6,flexWrap:'wrap'}}>
               {!isPublic && onUpdateCollection && collections.length > 0 && (
                 <select
                   aria-label={`Changer collection ${i.title}`}
@@ -75,6 +77,33 @@ export default function Wishlist({items,onRemove,onSelect,onUpdateNote,onUpdateC
               {!isPublic && <button aria-label={`Éditer note ${i.title}`} onClick={() => openEditor(i)} style={{fontSize:12,padding:'4px 8px'}}>✏️</button>}
               {!isPublic && <button aria-label={`Supprimer ${i.title}`} onClick={()=>onRemove(i.id,i.type)} style={{fontSize:12,padding:'4px 8px',marginLeft:0}}>Supprimer</button>}
             </div>
+            {!isPublic && (
+              <details className="wishlist-menu">
+                <summary aria-label={`Options ${i.title}`}>⋯</summary>
+                <div className="wishlist-menu-panel">
+                  {onUpdateCollection && collections.length > 0 && (
+                    <select
+                      aria-label={`Changer collection ${i.title}`}
+                      value={i.collection || 'default'}
+                      onChange={(e) => onUpdateCollection(i.id, i.type, e.target.value)}
+                      style={{ fontSize: 12, padding: '6px 8px' }}
+                    >
+                      {collections.map(c => (
+                        <option key={c.id} value={c.id}>{c.label}</option>
+                      ))}
+                      {!collectionMap.has(i.collection || 'default') && (
+                        <option value={i.collection || 'default'}>
+                          {resolveCollectionLabel(i.collection || 'default')}
+                        </option>
+                      )}
+                    </select>
+                  )}
+                  <button aria-label={`Voir détails ${i.title}`} onClick={()=>onSelect && onSelect(i)}>Détails</button>
+                  <button aria-label={`Éditer note ${i.title}`} onClick={() => openEditor(i)}>✏️ Note</button>
+                  <button aria-label={`Supprimer ${i.title}`} onClick={()=>onRemove(i.id,i.type)} style={{ background: '#ef4444', color: 'white' }}>Supprimer</button>
+                </div>
+              </details>
+            )}
           </li>
         ))}
       </ul>

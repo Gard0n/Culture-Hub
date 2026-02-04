@@ -113,9 +113,9 @@ export default function PublicWishlistView({ wishlist, onClose, loading, error }
                         {item.title}
                       </div>
 
-                      {item.year && (
-                        <div style={{ fontSize: 11, color: 'var(--text-light)', marginBottom: 8 }}>{item.year}</div>
-                      )}
+                      <div style={{ fontSize: 11, color: 'var(--text-light)', marginBottom: 8 }}>
+                        {item.creator || (item.type === 'book' ? (item.authors?.[0] || 'Auteur inconnu') : 'Réalisateur inconnu')}
+                      </div>
 
                       {/* Rating */}
                       {item.rating && item.rating > 0 && (
@@ -158,7 +158,7 @@ export default function PublicWishlistView({ wishlist, onClose, loading, error }
           color: 'var(--text-light)',
           background: 'var(--bg-secondary)'
         }}>
-          ✨ Wishlist créée avec culture hub V1.15 • Crée la tienne avec <strong>culture-hub.app</strong>
+          ✨ Wishlist créée avec culture hub V1.17 • Crée la tienne avec <strong>culture-hub.app</strong>
         </div>
       </div>
     </div>

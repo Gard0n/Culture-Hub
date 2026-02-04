@@ -107,9 +107,9 @@ export default function PublicProfileView({ profile, wishlist, loading, error, o
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.title}
                       </div>
-                      {item.year && (
-                        <div style={{ fontSize: 11, color: 'var(--text-light)', marginBottom: 8 }}>{item.year}</div>
-                      )}
+                      <div style={{ fontSize: 11, color: 'var(--text-light)', marginBottom: 8 }}>
+                        {item.creator || (item.type === 'book' ? (item.authors?.[0] || 'Auteur inconnu') : 'Réalisateur inconnu')}
+                      </div>
                     </div>
                   </div>
                 ))}
