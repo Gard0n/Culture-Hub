@@ -324,6 +324,8 @@ export default function App(){
 
   useEffect(() => {
     if (!currentUser || isPublicView) return
+    const preset = userProfile?.themePreset || 'cinema'
+    document.documentElement.setAttribute('data-skin', preset)
     const color = userProfile?.themeColor
     const rgb = hexToRgb(color)
     if (!color || !rgb) return
@@ -404,7 +406,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.12</h1>
+            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.13</h1>
             <p style={{margin:'4px 0 0',fontSize:14,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>

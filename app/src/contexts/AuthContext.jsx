@@ -49,7 +49,8 @@ export function AuthProvider({ children }) {
       photoURL: null, // Pas de Storage pour l'instant
       bio: '',
       publicProfile: false,
-      themeColor: '#475569',
+      themePreset: 'cinema',
+      themeColor: '#c44536',
       avatarUrl: '',
       createdAt: new Date(),
       updatedAt: new Date()
@@ -80,7 +81,8 @@ export function AuthProvider({ children }) {
           photoURL: user.photoURL || null,
           bio: '',
           publicProfile: false,
-          themeColor: '#475569',
+          themePreset: 'cinema',
+          themeColor: '#c44536',
           avatarUrl: user.photoURL || '',
           createdAt: new Date(),
           updatedAt: new Date()

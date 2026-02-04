@@ -3,11 +3,19 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { updateProfile } from 'firebase/auth'
 import { auth, db } from '../lib/firebase'
 
+const PRESET_THEMES = [
+  { id: 'cinema', label: 'Cine-Archive', hint: 'Chauds & velours' },
+  { id: 'library', label: 'Bibliothèque', hint: 'Verts doux' },
+  { id: 'club', label: 'Club Culture', hint: 'Neon dark' },
+  { id: 'brutal', label: 'Brutalist', hint: 'Noir + accent' }
+]
+
 export default function ProfilePanel({ currentUser, profile, variant = 'default' }) {
   const [displayName, setDisplayName] = useState(profile?.displayName || '')
   const [bio, setBio] = useState(profile?.bio || '')
   const [publicProfile, setPublicProfile] = useState(Boolean(profile?.publicProfile))
   const [themeColor, setThemeColor] = useState(profile?.themeColor || '#475569')
+  const [themePreset, setThemePreset] = useState(profile?.themePreset || 'cinema')
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -19,6 +27,7 @@ export default function ProfilePanel({ currentUser, profile, variant = 'default'
     setBio(profile.bio || '')
     setPublicProfile(Boolean(profile.publicProfile))
     setThemeColor(profile.themeColor || '#475569')
+    setThemePreset(profile.themePreset || 'cinema')
     setAvatarUrl(profile.avatarUrl || '')
   }, [profile])
 
@@ -38,6 +47,7 @@ export default function ProfilePanel({ currentUser, profile, variant = 'default'
         bio: bio.trim(),
         publicProfile: Boolean(publicProfile),
         themeColor: themeColor || '#475569',
+        themePreset: themePreset || 'cinema',
         avatarUrl: avatarUrl.trim(),
         updatedAt: new Date()
       })
@@ -97,8 +107,32 @@ export default function ProfilePanel({ currentUser, profile, variant = 'default'
           />
         </div>
         <div>
+          <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'var(--text-light)' }}>Style visuel</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+            {PRESET_THEMES.map(theme => (
+              <button
+                key={theme.id}
+                type="button"
+                onClick={() => setThemePreset(theme.id)}
+                style={{
+                  fontSize: 12,
+                  padding: '8px 10px',
+                  borderRadius: 12,
+                  border: themePreset === theme.id ? '2px solid var(--accent)' : '1px solid var(--border-color)',
+                  background: themePreset === theme.id ? 'var(--accent-light)' : 'var(--bg-tertiary)',
+                  color: 'var(--text-primary)'
+                }}
+              >
+                <div style={{ fontWeight: 600 }}>{theme.label}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-light)' }}>{theme.hint}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
           <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'var(--text-light)' }}>Couleur d'accent</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <p style={{ margin: 0, fontSize: 11, color: 'var(--text-light)' }}>Optionnel, pour personnaliser le thème sélectionné.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
             <input
               type="color"
               value={themeColor}
