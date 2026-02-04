@@ -73,16 +73,18 @@ export default function Recommendations({ wishlist, onAdd, onSelect }) {
       {loading ? (
         <p style={{ color: 'var(--text-light)' }}>Chargement...</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
+        <div className="media-grid media-grid-compact">
           {suggestions.map(s => (
-            <div key={s.id + '-' + s.type} style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => onSelect && onSelect(s)}>
+            <div key={s.id + '-' + s.type} className="media-card" style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => onSelect && onSelect(s)}>
               {s.poster ? (
                 <img src={`https://image.tmdb.org/t/p/w185${s.poster}`} alt={s.title} style={{ width: '100%', borderRadius: 6, height: 160, objectFit: 'cover' }} />
               ) : (
                 <div style={{ width: '100%', height: 160, background: 'var(--bg-tertiary)', borderRadius: 6 }} />
               )}
-              <div style={{ fontSize: 12, marginTop: 6, color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-light)' }}>{s.year}</div>
+              <div className="media-card-info" style={{ marginTop: 6 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-light)' }}>{s.year}</div>
+              </div>
             </div>
           ))}
         </div>

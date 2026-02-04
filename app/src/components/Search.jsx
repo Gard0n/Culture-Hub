@@ -120,20 +120,20 @@ export default function Search({onAdd, onSelect}){
             <ul className="results">
               {error && <li style={{color:'crimson',padding:8}}>{error}</li>}
               {results.map(r=> (
-                <li key={r.id+"-"+r.type} className="card" style={{background:'var(--bg-tertiary)',color:'var(--text-primary)'}}>
+                <li key={r.id+"-"+r.type} className="card result-card" style={{background:'var(--bg-tertiary)',color:'var(--text-primary)'}}>
                   <div className="left">
                     {r.poster ? (
                       <img src={posterUrl(r.poster,'w92')} alt={`Affiche ${r.title}`} />
                     ) : (
                       <div style={{width:56,height:84,background:'var(--bg-secondary)',borderRadius:6}} />
                     )}
-                    <div>
+                    <div className="result-info">
                       <strong style={{cursor:'pointer',display:'block',color:'var(--text-primary)'}} onClick={()=>onSelect && onSelect(r)}>{r.title}</strong>
                       <small style={{color:'var(--text-light)'}}>{r.year ? `(${r.year})` : ''}</small>
                       <div className="meta">{r.authors ? r.authors.join(', ') : ''}</div>
                     </div>
                   </div>
-                  <div>
+                  <div className="result-actions mobile-hide">
                     <button aria-label={`Ajouter ${r.title}`} onClick={()=>onAdd(r)}>Ajouter</button>
                     <button className="secondary" aria-label={`Voir détails ${r.title}`} onClick={()=>onSelect && onSelect(r)} style={{marginLeft:8}}>Détails</button>
                   </div>

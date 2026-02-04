@@ -83,9 +83,9 @@ export default function PublicWishlistView({ wishlist, onClose, loading, error }
 
             {/* Items */}
             <div style={{ padding: 20 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
+              <div className="media-grid">
                 {wishlist.map(item => (
-                  <div key={item.id + '-' + item.type} style={{
+                  <div key={item.id + '-' + item.type} className="media-card" style={{
                     background: 'var(--bg-secondary)',
                     borderRadius: 8,
                     overflow: 'hidden',
@@ -108,7 +108,7 @@ export default function PublicWishlistView({ wishlist, onClose, loading, error }
                     )}
 
                     {/* Info */}
-                    <div style={{ padding: 12 }}>
+                    <div className="media-card-info" style={{ padding: 12 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.title}
                       </div>
@@ -158,7 +158,7 @@ export default function PublicWishlistView({ wishlist, onClose, loading, error }
           color: 'var(--text-light)',
           background: 'var(--bg-secondary)'
         }}>
-          ✨ Wishlist créée avec culture hub V1.14 • Crée la tienne avec <strong>culture-hub.app</strong>
+          ✨ Wishlist créée avec culture hub V1.15 • Crée la tienne avec <strong>culture-hub.app</strong>
         </div>
       </div>
     </div>

@@ -82,9 +82,9 @@ export default function PublicProfileView({ profile, wishlist, loading, error, o
             </div>
 
             <div style={{ padding: 20 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
+              <div className="media-grid">
                 {wishlist.map(item => (
-                  <div key={item.id + '-' + item.type} style={{
+                  <div key={item.id + '-' + item.type} className="media-card" style={{
                     background: 'var(--bg-secondary)',
                     borderRadius: 8,
                     overflow: 'hidden',
@@ -103,7 +103,7 @@ export default function PublicProfileView({ profile, wishlist, loading, error, o
                         </span>
                       </div>
                     )}
-                    <div style={{ padding: 12 }}>
+                    <div className="media-card-info" style={{ padding: 12 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.title}
                       </div>

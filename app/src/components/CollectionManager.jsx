@@ -1,14 +1,23 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 export default function CollectionManager({ wishlist, selectedCollection, onSelectCollection, collections = [], onAddCollection }) {
   const [showNew, setShowNew] = useState(false)
   const [newCollectionName, setNewCollectionName] = useState('')
   const [error, setError] = useState('')
+  const [open, setOpen] = useState(() => window.innerWidth > 768)
 
   const itemsByCollection = collections.reduce((acc, col) => {
     acc[col.id] = wishlist.filter(i => (i.collection || 'default') === col.id).length
     return acc
   }, {})
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 769px)')
+    const handler = (e) => setOpen(e.matches)
+    handler(media)
+    media.addEventListener('change', handler)
+    return () => media.removeEventListener('change', handler)
+  }, [])
 
   function handleCreate() {
     const trimmed = newCollectionName.trim()
@@ -29,75 +38,87 @@ export default function CollectionManager({ wishlist, selectedCollection, onSele
   }
 
   return (
-    <section style={{ 
+    <section className="dropdown-section" style={{ 
       marginBottom: 16, 
       padding: 12, 
       background: 'var(--bg-secondary)', 
       borderRadius: 8, 
       border: '1px solid var(--border-color)' 
     }}>
-      <h3 style={{ margin: '0 0 12px', color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>📁 Collections</h3>
-      
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-        <button
-          onClick={() => onSelectCollection(null)}
-          style={{
-            padding: '6px 12px',
-            borderRadius: 20,
-            border: selectedCollection === null ? '2px solid var(--accent)' : '1px solid var(--border-color)',
-            background: selectedCollection === null ? 'var(--accent-light)' : 'var(--bg-tertiary)',
-            color: 'var(--text-primary)',
-            cursor: 'pointer',
-            fontSize: 12,
-            fontWeight: 500,
-            transition: 'all 0.2s'
-          }}
-        >
-          📊 Toutes ({wishlist.length})
-        </button>
+      <button
+        type="button"
+        className="dropdown-toggle"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        📁 Collections {open ? '▴' : '▾'}
+      </button>
 
-        {collections.map(col => (
-          <button
-            key={col.id}
-            onClick={() => onSelectCollection(col.id)}
-            style={{
-              padding: '6px 12px',
-              borderRadius: 20,
-              border: selectedCollection === col.id ? '2px solid var(--accent)' : '1px solid var(--border-color)',
-              background: selectedCollection === col.id ? 'var(--accent-light)' : 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
-              fontSize: 12,
-              fontWeight: 500,
-              transition: 'all 0.2s'
-            }}
-          >
-            {col.label} ({itemsByCollection[col.id] || 0})
-          </button>
-        ))}
+      {open && (
+        <>
+          <h3 style={{ margin: '12px 0', color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>📁 Collections</h3>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+            <button
+              onClick={() => onSelectCollection(null)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 20,
+                border: selectedCollection === null ? '2px solid var(--accent)' : '1px solid var(--border-color)',
+                background: selectedCollection === null ? 'var(--accent-light)' : 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 500,
+                transition: 'all 0.2s'
+              }}
+            >
+              📊 Toutes ({wishlist.length})
+            </button>
 
-        <button 
-          onClick={() => {
-            setShowNew(!showNew)
-            setError('')
-            if (showNew) setNewCollectionName('')
-          }}
-          style={{
-            padding: '6px 12px',
-            borderRadius: 20,
-            border: '1px dashed var(--accent)',
-            background: 'transparent',
-            color: 'var(--accent)',
-            cursor: 'pointer',
-            fontSize: 12,
-            fontWeight: 500
-          }}
-        >
-          + Nouvelle
-        </button>
-      </div>
+            {collections.map(col => (
+              <button
+                key={col.id}
+                onClick={() => onSelectCollection(col.id)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 20,
+                  border: selectedCollection === col.id ? '2px solid var(--accent)' : '1px solid var(--border-color)',
+                  background: selectedCollection === col.id ? 'var(--accent-light)' : 'var(--bg-tertiary)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  transition: 'all 0.2s'
+                }}
+              >
+                {col.label} ({itemsByCollection[col.id] || 0})
+              </button>
+            ))}
 
-      {showNew && (
+            <button 
+              onClick={() => {
+                setShowNew(!showNew)
+                setError('')
+                if (showNew) setNewCollectionName('')
+              }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 20,
+                border: '1px dashed var(--accent)',
+                background: 'transparent',
+                color: 'var(--accent)',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 500
+              }}
+            >
+              + Nouvelle
+            </button>
+          </div>
+        </>
+      )}
+
+      {open && showNew && (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <input
             type="text"
