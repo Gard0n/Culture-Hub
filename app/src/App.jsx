@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore'
 import { useAuth } from './contexts/AuthContext'
 import { db } from './lib/firebase'
@@ -48,6 +48,19 @@ function buildCollectionOptions(customCollections) {
   return [...BASE_COLLECTIONS, ...extras]
 }
 
+function hexToRgb(hex) {
+  if (!hex) return null
+  const clean = hex.replace('#', '').trim()
+  if (clean.length !== 6) return null
+  const num = parseInt(clean, 16)
+  if (Number.isNaN(num)) return null
+  return {
+    r: (num >> 16) & 255,
+    g: (num >> 8) & 255,
+    b: num & 255
+  }
+}
+
 export default function App(){
   const { currentUser, logout, getUserInitials } = useAuth()
   const [showRegister, setShowRegister] = useState(false)
@@ -59,6 +72,8 @@ export default function App(){
   const [publicProfile, setPublicProfile] = useState(null)
   const [publicProfileWishlist, setPublicProfileWishlist] = useState([])
   const [userProfile, setUserProfile] = useState(null)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const profileMenuRef = useRef(null)
 
   const initialHash = window.location.hash || ''
   const [hash, setHash] = useState(() => initialHash)
@@ -289,6 +304,33 @@ export default function App(){
     return () => unsubscribe()
   }, [currentUser, isPublicView])
 
+  useEffect(() => {
+    if (!profileMenuOpen) return
+    function handleClick(e) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setProfileMenuOpen(false)
+      }
+    }
+    function handleEscape(e) {
+      if (e.key === 'Escape') setProfileMenuOpen(false)
+    }
+    window.addEventListener('mousedown', handleClick)
+    window.addEventListener('keydown', handleEscape)
+    return () => {
+      window.removeEventListener('mousedown', handleClick)
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [profileMenuOpen])
+
+  useEffect(() => {
+    if (!currentUser || isPublicView) return
+    const color = userProfile?.themeColor
+    const rgb = hexToRgb(color)
+    if (!color || !rgb) return
+    document.documentElement.style.setProperty('--accent', color)
+    document.documentElement.style.setProperty('--accent-light', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`)
+  }, [userProfile, currentUser, isPublicView])
+
   async function publishPublicWishlist() {
     if (!currentUser) return
     const ownerName = currentUser.displayName || currentUser.email?.split('@')[0] || 'Utilisateur'
@@ -320,6 +362,9 @@ export default function App(){
   const profileLinkHandler = (userId) => {
     window.location.hash = `profile=${userId}`
   }
+
+  const avatarUrl = userProfile?.avatarUrl || currentUser?.photoURL || ''
+  const avatarColor = userProfile?.themeColor || 'var(--accent)'
 
   function addToWishlist(item){
     if(!wishlist.find(i=>i.id===item.id && i.type===item.type)){
@@ -359,7 +404,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.11</h1>
+            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.12</h1>
             <p style={{margin:'4px 0 0',fontSize:14,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -368,57 +413,83 @@ export default function App(){
             <ThemeToggle />
             {!isPublicView && <Notifications />}
             {currentUser && !isPublicView && (
-              <>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '6px 12px',
-                  background: 'var(--bg-tertiary)',
-                  borderRadius: 20,
-                  border: '1px solid var(--border)'
-                }}>
-                  <div style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    background: 'var(--accent)',
-                    color: 'white',
+              <div ref={profileMenuRef} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setProfileMenuOpen(o => !o)}
+                  style={{
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 12,
-                    fontWeight: 600
-                  }}>
-                    {getUserInitials(userProfile ? { ...currentUser, displayName: userProfile.displayName } : currentUser)}
-                  </div>
-                  <span style={{ fontSize: 13, fontWeight: 500 }}>
-                    {(userProfile && userProfile.displayName) || currentUser.displayName || currentUser.email.split('@')[0]}
-                  </span>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    padding: '8px 16px',
+                    gap: 8,
+                    padding: '6px 12px',
                     background: 'var(--bg-tertiary)',
+                    borderRadius: 20,
                     border: '1px solid var(--border)',
-                    borderRadius: 6,
                     cursor: 'pointer',
                     fontSize: 13,
                     fontWeight: 500,
-                    color: 'var(--text-primary)',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'var(--bg-secondary)'
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'var(--bg-tertiary)'
+                    color: 'var(--text-primary)'
                   }}
                 >
-                  Se déconnecter
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="Avatar"
+                      style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      background: avatarColor,
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 12,
+                      fontWeight: 600
+                    }}>
+                      {getUserInitials(userProfile ? { ...currentUser, displayName: userProfile.displayName } : currentUser)}
+                    </div>
+                  )}
+                  <span>
+                    {(userProfile && userProfile.displayName) || currentUser.displayName || currentUser.email.split('@')[0]}
+                  </span>
+                  <span style={{ fontSize: 12, opacity: 0.7 }}>{profileMenuOpen ? '▴' : '▾'}</span>
                 </button>
-              </>
+                {profileMenuOpen && (
+                  <div style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: '110%',
+                    background: 'var(--bg-tertiary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 8,
+                    padding: 12,
+                    width: 320,
+                    boxShadow: 'var(--shadow-hover)',
+                    zIndex: 10
+                  }}>
+                    <ProfilePanel currentUser={currentUser} profile={userProfile} variant="menu" />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                      <button
+                        onClick={handleLogout}
+                        style={{ fontSize: 12, padding: '6px 10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                      >
+                        Se déconnecter
+                      </button>
+                      {userProfile?.publicProfile && (
+                        <button
+                          onClick={() => profileLinkHandler(currentUser.uid)}
+                          style={{ fontSize: 12, padding: '6px 10px' }}
+                        >
+                          Voir profil public
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -468,10 +539,7 @@ export default function App(){
             </section>
           )}
           {!isPublicView && currentUser && (
-            <>
-              <ProfilePanel currentUser={currentUser} profile={userProfile} />
-              <FriendsPanel currentUser={currentUser} onOpenProfile={profileLinkHandler} />
-            </>
+            <FriendsPanel currentUser={currentUser} onOpenProfile={profileLinkHandler} />
           )}
         </div>
       </main>

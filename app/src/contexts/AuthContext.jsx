@@ -48,6 +48,9 @@ export function AuthProvider({ children }) {
       displayName: displayName || user.email.split('@')[0],
       photoURL: null, // Pas de Storage pour l'instant
       bio: '',
+      publicProfile: false,
+      themeColor: '#475569',
+      avatarUrl: '',
       createdAt: new Date(),
       updatedAt: new Date()
     })
@@ -76,6 +79,9 @@ export function AuthProvider({ children }) {
           displayName: user.displayName || user.email.split('@')[0],
           photoURL: user.photoURL || null,
           bio: '',
+          publicProfile: false,
+          themeColor: '#475569',
+          avatarUrl: user.photoURL || '',
           createdAt: new Date(),
           updatedAt: new Date()
         })

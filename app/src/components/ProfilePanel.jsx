@@ -3,10 +3,12 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { updateProfile } from 'firebase/auth'
 import { auth, db } from '../lib/firebase'
 
-export default function ProfilePanel({ currentUser, profile }) {
+export default function ProfilePanel({ currentUser, profile, variant = 'default' }) {
   const [displayName, setDisplayName] = useState(profile?.displayName || '')
   const [bio, setBio] = useState(profile?.bio || '')
   const [publicProfile, setPublicProfile] = useState(Boolean(profile?.publicProfile))
+  const [themeColor, setThemeColor] = useState(profile?.themeColor || '#475569')
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -16,6 +18,8 @@ export default function ProfilePanel({ currentUser, profile }) {
     setDisplayName(profile.displayName || '')
     setBio(profile.bio || '')
     setPublicProfile(Boolean(profile.publicProfile))
+    setThemeColor(profile.themeColor || '#475569')
+    setAvatarUrl(profile.avatarUrl || '')
   }, [profile])
 
   const profileUrl = currentUser
@@ -33,10 +37,15 @@ export default function ProfilePanel({ currentUser, profile }) {
         displayName: displayName.trim(),
         bio: bio.trim(),
         publicProfile: Boolean(publicProfile),
+        themeColor: themeColor || '#475569',
+        avatarUrl: avatarUrl.trim(),
         updatedAt: new Date()
       })
       if (auth.currentUser && displayName.trim() && auth.currentUser.displayName !== displayName.trim()) {
         await updateProfile(auth.currentUser, { displayName: displayName.trim() })
+      }
+      if (auth.currentUser && avatarUrl.trim() && auth.currentUser.photoURL !== avatarUrl.trim()) {
+        await updateProfile(auth.currentUser, { photoURL: avatarUrl.trim() })
       }
       setSaved(true)
       setTimeout(() => setSaved(false), 1500)
@@ -59,8 +68,12 @@ export default function ProfilePanel({ currentUser, profile }) {
     }
   }
 
+  const containerStyle = variant === 'menu'
+    ? { marginTop: 0, padding: 0, background: 'transparent', border: 'none', boxShadow: 'none' }
+    : { marginTop: 16, padding: 16, background: 'var(--bg-secondary)', borderRadius: 8, border: '1px solid var(--border-color)' }
+
   return (
-    <section style={{ marginTop: 16, padding: 16, background: 'var(--bg-secondary)', borderRadius: 8, border: '1px solid var(--border-color)' }}>
+    <section style={containerStyle}>
       <h3 style={{ margin: '0 0 12px', color: 'var(--text-primary)', fontSize: 16, fontWeight: 600 }}>👤 Mon profil</h3>
       <form onSubmit={handleSave} style={{ display: 'grid', gap: 10 }}>
         <div>
@@ -72,6 +85,34 @@ export default function ProfilePanel({ currentUser, profile }) {
             placeholder="Ton nom public"
             style={{ fontSize: 12 }}
           />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'var(--text-light)' }}>Image de profil (URL)</label>
+          <input
+            type="text"
+            value={avatarUrl}
+            onChange={(e) => setAvatarUrl(e.target.value)}
+            placeholder="https://..."
+            style={{ fontSize: 12 }}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'var(--text-light)' }}>Couleur d'accent</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="color"
+              value={themeColor}
+              onChange={(e) => setThemeColor(e.target.value)}
+              style={{ width: 44, height: 32, padding: 0, border: 'none', background: 'transparent' }}
+            />
+            <input
+              type="text"
+              value={themeColor}
+              onChange={(e) => setThemeColor(e.target.value)}
+              placeholder="#475569"
+              style={{ fontSize: 12, maxWidth: 120 }}
+            />
+          </div>
         </div>
         <div>
           <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'var(--text-light)' }}>Bio</label>
