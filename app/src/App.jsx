@@ -12,7 +12,6 @@ import Notifications from './components/Notifications'
 import ExportImport from './components/ExportImport'
 import Share, { decodeWishlist } from './components/Share'
 import Stats from './components/Stats'
-import ThemeToggle from './components/ThemeToggle'
 import WishlistFilters from './components/WishlistFilters'
 import CollectionManager from './components/CollectionManager'
 import Recommendations from './components/Recommendations'
@@ -406,13 +405,12 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.13</h1>
+            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.14</h1>
             <p style={{margin:'4px 0 0',fontSize:14,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
             <span style={{fontSize:12,color:'var(--text-light)'}}>{wishlist.length} item{wishlist.length>1?'s':''}</span>
             {isPublicView && <span style={{fontSize: 12, background: 'var(--accent-light)', padding: '4px 8px', borderRadius: 4, color: 'var(--accent)'}}>👁️ Vue publique</span>}
-            <ThemeToggle />
             {!isPublicView && <Notifications />}
             {currentUser && !isPublicView && (
               <div ref={profileMenuRef} style={{ position: 'relative' }}>
@@ -468,7 +466,7 @@ export default function App(){
                     border: '1px solid var(--border-color)',
                     borderRadius: 8,
                     padding: 12,
-                    width: 320,
+                    width: 'min(320px, 92vw)',
                     boxShadow: 'var(--shadow-hover)',
                     zIndex: 10
                   }}>

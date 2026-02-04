@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { updateProfile } from 'firebase/auth'
 import { auth, db } from '../lib/firebase'
+import ThemeToggle from './ThemeToggle'
 
 const PRESET_THEMES = [
   { id: 'cinema', label: 'Cine-Archive', hint: 'Chauds & velours' },
@@ -128,6 +129,10 @@ export default function ProfilePanel({ currentUser, profile, variant = 'default'
               </button>
             ))}
           </div>
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'var(--text-light)' }}>Mode</label>
+          <ThemeToggle variant="menu" label="Mode sombre" />
         </div>
         <div>
           <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'var(--text-light)' }}>Couleur d'accent</label>

@@ -180,7 +180,7 @@ export default function FriendsPanel({ currentUser, onOpenProfile }) {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
         <div>
           <div style={{ fontSize: 12, color: 'var(--text-light)', marginBottom: 6 }}>
             Abonnements ({followingUsers.length})
