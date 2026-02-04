@@ -84,6 +84,9 @@ export default function App(){
   const [userProfile, setUserProfile] = useState(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef(null)
+  const [refreshingCreators, setRefreshingCreators] = useState(false)
+  const [refreshProgress, setRefreshProgress] = useState({ total: 0, done: 0 })
+  const [refreshNote, setRefreshNote] = useState('')
 
   const initialHash = window.location.hash || ''
   const [hash, setHash] = useState(() => initialHash)
@@ -422,6 +425,60 @@ export default function App(){
     ))
   }
 
+  const missingCreatorsCount = wishlist.filter(i => {
+    if (i.type === 'book') return !i.creator && i.authors?.length
+    return !i.creator
+  }).length
+
+  async function refreshCreators() {
+    if (refreshingCreators) return
+    const targets = wishlist.filter(i => {
+      if (i.type === 'book') return !i.creator && i.authors?.length
+      return !i.creator
+    })
+    if (targets.length === 0) {
+      setRefreshNote('Rien à mettre à jour.')
+      return
+    }
+    const apiKey = import.meta.env.VITE_TMDB_API_KEY
+    const lang = import.meta.env.VITE_TMDB_LANGUAGE || 'fr-FR'
+    if (targets.some(i => i.type !== 'book') && !apiKey) {
+      setRefreshNote('Clé TMDB manquante.')
+      return
+    }
+
+    setRefreshingCreators(true)
+    setRefreshNote('')
+    setRefreshProgress({ total: targets.length, done: 0 })
+
+    const updates = new Map()
+    let done = 0
+    for (const item of targets) {
+      if (item.type === 'book') {
+        const author = item.authors?.[0]
+        if (author) updates.set(`${item.type}:${item.id}`, author)
+      } else {
+        try {
+          const details = await fetchTMDBDetails(item.id, item.type, apiKey, lang)
+          const creator = resolveCreatorFromDetails(details, item.type)
+          if (creator) updates.set(`${item.type}:${item.id}`, creator)
+        } catch {}
+      }
+      done += 1
+      setRefreshProgress({ total: targets.length, done })
+      await new Promise(resolve => setTimeout(resolve, 120))
+    }
+
+    if (updates.size > 0) {
+      setWishlist(prev => prev.map(i => {
+        const key = `${i.type}:${i.id}`
+        return updates.has(key) ? { ...i, creator: updates.get(key) } : i
+      }))
+    }
+    setRefreshingCreators(false)
+    setTimeout(() => setRefreshProgress({ total: 0, done: 0 }), 1600)
+  }
+
   // Si l'utilisateur n'est pas connecté et qu'on n'est pas en vue publique, afficher Login/Register
   if (!currentUser && !isPublicView) {
     return showRegister
@@ -434,7 +491,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.18</h1>
+            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.19</h1>
             <p style={{margin:'4px 0 0',fontSize:12,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -565,6 +622,22 @@ export default function App(){
                   onPublish={publishPublicWishlist}
                 />
               )}
+              <div className="creator-refresh">
+                <div className="creator-refresh-head">
+                  <h3>🎬 Réalisateurs & auteurs</h3>
+                  <small>{missingCreatorsCount} manquant{missingCreatorsCount > 1 ? 's' : ''}</small>
+                </div>
+                <small>Met à jour les réalisateurs des films/séries et les auteurs des livres déjà en wishlist.</small>
+                <button onClick={refreshCreators} disabled={refreshingCreators || missingCreatorsCount === 0}>
+                  {refreshingCreators ? 'Mise à jour…' : 'Actualiser'}
+                </button>
+                {refreshProgress.total > 0 && (
+                  <div className="creator-refresh-progress">
+                    Mise à jour {refreshProgress.done}/{refreshProgress.total}
+                  </div>
+                )}
+                {refreshNote && <div className="creator-refresh-progress">{refreshNote}</div>}
+              </div>
             </section>
           )}
           {!isPublicView && currentUser && (

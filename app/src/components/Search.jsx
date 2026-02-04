@@ -15,6 +15,13 @@ export default function Search({onAdd, onSelect}){
   const apiKey = import.meta.env.VITE_TMDB_API_KEY || ''
   const lang = import.meta.env.VITE_TMDB_LANGUAGE || 'fr-FR'
 
+  function handleTypeChange(nextType) {
+    setType(nextType)
+    setResults([])
+    setSelectedGenre('')
+    setYear('')
+  }
+
   useEffect(()=>{
     async function loadGenres(){
       if(type==='book') return
@@ -80,24 +87,61 @@ export default function Search({onAdd, onSelect}){
 
   return (
     <section className="search">
-      <form onSubmit={(e)=>doSearch(e,1)}>
-        <input placeholder="Rechercher..." value={q} onChange={e=>setQ(e.target.value)} />
-        <select value={type} onChange={e=>{setType(e.target.value); setResults([]); setSelectedGenre(''); setYear('')}}>
-          <option value="movie">Film</option>
-          <option value="tv">Série</option>
-          <option value="book">Livre</option>
-        </select>
-        <input placeholder="Année (ex: 2024)" value={year} onChange={e=>setYear(e.target.value)} style={{width:120}} />
-        {type!=='book' && (
-          <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)}>
-            <option value="">-- Genre --</option>
-            {Object.entries(genres).map(([id,name])=> (
-              <option key={id} value={name}>{name}</option>
-            ))}
-          </select>
-        )}
-        <button type="submit">Rechercher</button>
-      </form>
+      <div className="search-panel">
+        <div className="search-header">
+          <div>
+            <h2>🔎 Recherche</h2>
+            <p>Films, séries & livres</p>
+          </div>
+          <div className="search-type" role="tablist" aria-label="Type de recherche">
+            <button
+              type="button"
+              className={type === 'movie' ? 'active' : ''}
+              aria-pressed={type === 'movie'}
+              onClick={() => handleTypeChange('movie')}
+            >
+              🎬 Films
+            </button>
+            <button
+              type="button"
+              className={type === 'tv' ? 'active' : ''}
+              aria-pressed={type === 'tv'}
+              onClick={() => handleTypeChange('tv')}
+            >
+              📺 Séries
+            </button>
+            <button
+              type="button"
+              className={type === 'book' ? 'active' : ''}
+              aria-pressed={type === 'book'}
+              onClick={() => handleTypeChange('book')}
+            >
+              📚 Livres
+            </button>
+          </div>
+        </div>
+        <form className="search-form" onSubmit={(e)=>doSearch(e,1)}>
+          <div className="search-row">
+            <div className="search-field search-grow">
+              <input placeholder="Rechercher un titre, un auteur..." value={q} onChange={e=>setQ(e.target.value)} />
+            </div>
+            <div className="search-field">
+              <input placeholder="Année (ex: 2024)" value={year} onChange={e=>setYear(e.target.value)} />
+            </div>
+            {type!=='book' && (
+              <div className="search-field">
+                <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)}>
+                  <option value="">-- Genre --</option>
+                  {Object.entries(genres).map(([id,name])=> (
+                    <option key={id} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <button className="search-submit" type="submit">Rechercher</button>
+          </div>
+        </form>
+      </div>
           {loading ? (
             <ul className="results">
               {Array.from({length:6}).map((_,i)=> (

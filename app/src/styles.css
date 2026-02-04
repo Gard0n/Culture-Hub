@@ -123,7 +123,19 @@ header > div { background: var(--glass); backdrop-filter: blur(14px); border: 1p
 header h1 { margin: 0; font-weight: 700; color: var(--text-primary); font-size: 24px; line-height: 1.1; font-family: var(--font-display); letter-spacing: -0.02em; }
 header p { margin: 4px 0 0; color: var(--text-secondary); font-size: 12px; }
 main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; margin-top: 24px; align-items: start; }
-.search form { display: flex; gap: 10px; flex-wrap: wrap; }
+.search { background: transparent; padding: 0; border: none; box-shadow: none; }
+.search-panel { background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-color); box-shadow: var(--shadow); }
+.search-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.search-header h2 { margin: 0; font-size: 18px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display); }
+.search-header p { margin: 4px 0 0; color: var(--text-light); font-size: 12px; }
+.search-type { display: flex; gap: 6px; flex-wrap: wrap; background: var(--bg-secondary); padding: 6px; border-radius: 999px; border: 1px solid var(--border-color); }
+.search-type button { background: transparent; color: var(--text-secondary); border: 1px solid transparent; padding: 6px 10px; border-radius: 999px; font-size: 12px; min-height: 32px; min-width: unset; font-weight: 600; }
+.search-type button.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+.search-form { display: flex; flex-direction: column; gap: 10px; }
+.search-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.search-field { flex: 1 1 160px; min-width: 140px; }
+.search-grow { flex: 2 1 280px; }
+.search-submit { white-space: nowrap; }
 .results { list-style: none; padding: 0; margin-top: 12px; }
 .results li { display: flex; justify-content: space-between; padding: 12px; background: var(--bg-tertiary); border-radius: var(--radius-sm); margin-top: 10px; align-items: center; box-shadow: var(--shadow); transition: all 0.2s; color: var(--text-primary); gap: 12px; flex-wrap: wrap; border: 1px solid var(--border-color); }
 .results li:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
@@ -152,6 +164,11 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; ma
 .wishlist li { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color); transition: 0.15s; flex-wrap: wrap; gap: 8px; }
 .wishlist li:hover { background: var(--bg-hover); padding: 10px; border-radius: 6px; }
 .wishlist img { width: 60px; height: 90px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
+.creator-refresh { margin-top: 12px; padding: 12px; border-radius: 12px; border: 1px dashed var(--border-color); background: var(--bg-secondary); display: grid; gap: 8px; }
+.creator-refresh-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.creator-refresh-head h3 { margin: 0; font-size: 14px; font-weight: 600; color: var(--text-primary); font-family: var(--font-display); }
+.creator-refresh small { color: var(--text-light); }
+.creator-refresh-progress { font-size: 12px; color: var(--text-light); }
 button { background: var(--btn-bg); color: var(--btn-text); border: 0; padding: 10px 14px; border-radius: 999px; cursor: pointer; transition: all 0.15s; font-size: 14px; font-weight: 600; min-height: 42px; min-width: 42px; touch-action: manipulation; letter-spacing: 0.01em; }
 button:hover { background: var(--btn-bg-hover); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
 button:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -186,7 +203,11 @@ input[type="file"] { padding: 8px; color: var(--text-primary); }
   header h1 { font-size: 22px; }
   main { gap: 16px; margin-top: 16px; }
   .wishlist { order: 2; }
-  .search form { flex-direction: column; }
+  .search-header { align-items: flex-start; }
+  .search-type { width: 100%; }
+  .search-type button { flex: 1 1 30%; text-align: center; }
+  .search-row { flex-direction: column; align-items: stretch; }
+  .search-field, .search-submit { width: 100%; }
   .search input, .search select { width: 100%; }
   .results li { flex-direction: column; align-items: stretch; }
   .results li .left { width: 100%; }
