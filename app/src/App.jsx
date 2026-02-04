@@ -49,6 +49,11 @@ export default function App(){
   const { currentUser, logout, getUserInitials } = useAuth()
   const [showRegister, setShowRegister] = useState(false)
   const [wishlistLoaded, setWishlistLoaded] = useState(false)
+  const [publicLoading, setPublicLoading] = useState(false)
+  const [publicError, setPublicError] = useState('')
+
+  const initialHash = window.location.hash || ''
+  const [hash, setHash] = useState(() => initialHash)
 
   // Gérer la déconnexion
   async function handleLogout() {
@@ -81,8 +86,7 @@ export default function App(){
   }
 
   const [wishlist, setWishlist] = useState(() => {
-    const hash = window.location.hash.slice(1)
-    const params = new URLSearchParams(hash)
+    const params = new URLSearchParams(initialHash.slice(1))
     const listParam = params.get('list')
     if (listParam) {
       const decoded = decodeWishlist(listParam)
@@ -96,8 +100,62 @@ export default function App(){
   const [showPublicView, setShowPublicView] = useState(false)
   const [selectedCollection, setSelectedCollection] = useState(null)
   
+  useEffect(() => {
+    const handler = () => setHash(window.location.hash || '')
+    window.addEventListener('hashchange', handler)
+    return () => window.removeEventListener('hashchange', handler)
+  }, [])
+
+  const hashParams = new URLSearchParams((hash || '').replace(/^#/, ''))
+  const listParam = hashParams.get('list')
+  const publicParam = hashParams.get('public')
+
   // Vérifier si on affiche une wishlist publique
-  const isPublicView = window.location.hash.includes('list=')
+  const isPublicView = Boolean(listParam || publicParam)
+
+  useEffect(() => {
+    if (!listParam) return
+    const decoded = decodeWishlist(listParam)
+    if (decoded && Array.isArray(decoded)) {
+      setWishlist(decoded)
+    } else {
+      setWishlist([])
+    }
+  }, [listParam])
+
+  useEffect(() => {
+    if (!publicParam) {
+      setPublicError('')
+      setPublicLoading(false)
+      return
+    }
+    let cancelled = false
+    async function loadPublicWishlist() {
+      setPublicLoading(true)
+      setPublicError('')
+      try {
+        const ref = doc(db, 'public_wishlists', publicParam)
+        const snap = await getDoc(ref)
+        if (cancelled) return
+        if (snap.exists()) {
+          const data = snap.data()
+          const items = Array.isArray(data.items) ? data.items : []
+          setWishlist(items)
+        } else {
+          setWishlist([])
+          setPublicError('Wishlist publique introuvable')
+        }
+      } catch (error) {
+        console.error('Erreur chargement wishlist publique', error)
+        if (!cancelled) setPublicError('Erreur lors du chargement')
+      } finally {
+        if (!cancelled) setPublicLoading(false)
+      }
+    }
+
+    loadPublicWishlist()
+    return () => { cancelled = true }
+  }, [publicParam])
 
   useEffect(()=>{
     if (isPublicView) return
@@ -160,6 +218,17 @@ export default function App(){
     return () => clearTimeout(timeout)
   }, [wishlist, currentUser, isPublicView, wishlistLoaded])
 
+  async function publishPublicWishlist() {
+    if (!currentUser) return
+    const ownerName = currentUser.displayName || currentUser.email?.split('@')[0] || 'Utilisateur'
+    const ref = doc(db, 'public_wishlists', currentUser.uid)
+    await setDoc(ref, {
+      owner: { id: currentUser.uid, name: ownerName },
+      items: wishlist,
+      updatedAt: new Date()
+    }, { merge: true })
+  }
+
   function handleAddCollection(name) {
     const trimmed = (name || '').trim()
     if (!trimmed) return
@@ -173,6 +242,9 @@ export default function App(){
   }
 
   const collectionOptions = buildCollectionOptions(customCollections)
+  const publicShareUrl = currentUser
+    ? `${window.location.origin}${window.location.pathname}#public=${currentUser.uid}`
+    : ''
 
   function addToWishlist(item){
     if(!wishlist.find(i=>i.id===item.id && i.type===item.type)){
@@ -212,7 +284,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.06</h1>
+            <h1 style={{margin:0,fontSize:28,fontWeight:700}}>🎬 culture hub V1.07</h1>
             <p style={{margin:'4px 0 0',fontSize:14,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -311,7 +383,13 @@ export default function App(){
             <section style={{background:'var(--bg-tertiary)',padding:16,borderRadius:8,boxShadow:'var(--shadow)',marginTop:24}}>
               <h2 style={{margin:'0 0 12px',color:'var(--text-primary)',fontSize:16,fontWeight:600}}>📥 Gérer ma wishlist</h2>
               <ExportImport wishlist={wishlist} onImport={handleImport} />
-              {wishlist.length > 0 && <Share wishlist={wishlist} />}
+              {wishlist.length > 0 && (
+                <Share
+                  wishlist={wishlist}
+                  publicUrl={publicShareUrl}
+                  onPublish={publishPublicWishlist}
+                />
+              )}
             </section>
           )}
         </div>
@@ -326,7 +404,12 @@ export default function App(){
       )}
 
       {isPublicView && (
-        <PublicWishlistView wishlist={wishlist} onClose={() => window.location.hash = ''} />
+        <PublicWishlistView
+          wishlist={wishlist}
+          loading={publicLoading}
+          error={publicError}
+          onClose={() => window.location.hash = ''}
+        />
       )}
     </div>
   )
