@@ -19,6 +19,7 @@ import PublicWishlistView from './components/PublicWishlistView'
 import PublicProfileView from './components/PublicProfileView'
 import ProfilePanel from './components/ProfilePanel'
 import FriendsPanel from './components/FriendsPanel'
+import { fetchTMDBDetails } from './api/tmdb'
 
 const BASE_COLLECTIONS = [
   { id: 'default', label: 'Sans collection' },
@@ -58,6 +59,16 @@ function hexToRgb(hex) {
     g: (num >> 8) & 255,
     b: num & 255
   }
+}
+
+function resolveCreatorFromDetails(details, type) {
+  if (!details) return ''
+  if (type === 'tv') {
+    if (details.created_by && details.created_by.length > 0) return details.created_by[0].name
+  }
+  const crew = details.credits?.crew || []
+  const director = crew.find(c => c.job === 'Director')
+  return director ? director.name : ''
 }
 
 export default function App(){
@@ -368,8 +379,26 @@ export default function App(){
   const avatarColor = userProfile?.themeColor || 'var(--accent)'
 
   function addToWishlist(item){
-    if(!wishlist.find(i=>i.id===item.id && i.type===item.type)){
-      setWishlist([{...item, collection: selectedCollection || 'default'}, ...wishlist])
+    if (wishlist.find(i => i.id === item.id && i.type === item.type)) return
+    const baseItem = { ...item, collection: selectedCollection || 'default' }
+    if (baseItem.type === 'book' && !baseItem.creator && baseItem.authors?.length) {
+      baseItem.creator = baseItem.authors[0]
+    }
+    setWishlist(prev => [baseItem, ...prev])
+
+    if (!baseItem.creator && baseItem.type !== 'book') {
+      const apiKey = import.meta.env.VITE_TMDB_API_KEY
+      const lang = import.meta.env.VITE_TMDB_LANGUAGE || 'fr-FR'
+      if (!apiKey) return
+      fetchTMDBDetails(baseItem.id, baseItem.type, apiKey, lang)
+        .then(details => {
+          const creator = resolveCreatorFromDetails(details, baseItem.type)
+          if (!creator) return
+          setWishlist(prev => prev.map(i => (
+            i.id === baseItem.id && i.type === baseItem.type ? { ...i, creator } : i
+          )))
+        })
+        .catch(() => {})
     }
   }
 
@@ -405,7 +434,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.17</h1>
+            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.18</h1>
             <p style={{margin:'4px 0 0',fontSize:12,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -498,8 +527,8 @@ export default function App(){
         <div>
           {!isPublicView && (
             <>
-              <Upcoming onAdd={addToWishlist} onSelect={setSelectedMedia} />
               <Search onAdd={addToWishlist} onSelect={setSelectedMedia} />
+              <Upcoming onAdd={addToWishlist} onSelect={setSelectedMedia} />
             </>
           )}
         </div>

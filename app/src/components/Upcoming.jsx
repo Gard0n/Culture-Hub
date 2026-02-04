@@ -64,7 +64,6 @@ export default function Upcoming({ onSelect, onAdd }) {
                 <small style={{ color: 'var(--text-light)' }}>
                   {it.creator || 'Réalisateur inconnu'}
                 </small>
-                <span className="tap-hint mobile-only">Tap pour détails</span>
               </div>
               <div className="media-card-actions mobile-hide" style={{ marginTop: 8 }}>
                 <button

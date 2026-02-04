@@ -84,7 +84,6 @@ export default function Recommendations({ wishlist, onAdd, onSelect }) {
               <div className="media-card-info" style={{ marginTop: 6 }}>
                 <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-light)' }}>{s.creator || 'Réalisateur inconnu'}</div>
-                <span className="tap-hint mobile-only">Tap pour détails</span>
               </div>
             </div>
           ))}
