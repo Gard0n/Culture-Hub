@@ -74,6 +74,7 @@ export default function App(){
   const [userProfile, setUserProfile] = useState(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const initialHash = window.location.hash || ''
   const [hash, setHash] = useState(() => initialHash)
@@ -138,6 +139,26 @@ export default function App(){
   const isPublicView = Boolean(listParam || publicParam || profileParam)
   const showPublicListView = Boolean(listParam || publicParam)
   const showPublicProfileView = Boolean(profileParam)
+
+  useEffect(() => {
+    if (isPublicView) setDrawerOpen(false)
+  }, [isPublicView])
+
+  useEffect(() => {
+    if (!drawerOpen) {
+      document.body.style.overflow = ''
+      return
+    }
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setDrawerOpen(false)
+    }
+    document.addEventListener('keydown', handleKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleKey)
+      document.body.style.overflow = ''
+    }
+  }, [drawerOpen])
 
   useEffect(() => {
     if (!listParam) return
@@ -406,13 +427,18 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.23</h1>
+            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.24</h1>
             <p style={{margin:'4px 0 0',fontSize:12,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
             <span style={{fontSize:12,color:'var(--text-light)'}}>{wishlist.length} item{wishlist.length>1?'s':''}</span>
             {isPublicView && <span style={{fontSize: 12, background: 'var(--accent-light)', padding: '4px 8px', borderRadius: 4, color: 'var(--accent)'}}>👁️ Vue publique</span>}
             {!isPublicView && <Notifications />}
+            {currentUser && !isPublicView && (
+              <button className="drawer-toggle" onClick={() => setDrawerOpen(true)}>
+                ☰ Menu
+              </button>
+            )}
             {currentUser && !isPublicView && (
               <div ref={profileMenuRef} style={{ position: 'relative' }}>
                 <button
@@ -524,26 +550,41 @@ export default function App(){
             isPublic={isPublicView}
             collections={collectionOptions}
           />
-          <Stats wishlist={isPublicView ? wishlist : filteredWishlist} />
+          {isPublicView && <Stats wishlist={wishlist} />}
           {!isPublicView && <Recommendations wishlist={wishlist} onAdd={addToWishlist} onSelect={setSelectedMedia} />}
-          {!isPublicView && (
-            <section style={{background:'var(--bg-tertiary)',padding:16,borderRadius:8,boxShadow:'var(--shadow)',marginTop:24}}>
-              <h2 style={{margin:'0 0 12px',color:'var(--text-primary)',fontSize:16,fontWeight:600}}>📥 Gérer ma wishlist</h2>
-              <ExportImport wishlist={wishlist} onImport={handleImport} />
-              {wishlist.length > 0 && (
-                <Share
-                  wishlist={wishlist}
-                  publicUrl={publicShareUrl}
-                  onPublish={publishPublicWishlist}
-                />
-              )}
-            </section>
-          )}
-          {!isPublicView && currentUser && (
-            <FriendsPanel currentUser={currentUser} onOpenProfile={profileLinkHandler} />
-          )}
         </div>
       </main>
+
+      {currentUser && !isPublicView && (
+        <>
+          <div
+            className={`drawer-backdrop ${drawerOpen ? 'open' : ''}`}
+            onClick={() => setDrawerOpen(false)}
+            aria-hidden={!drawerOpen}
+          />
+          <aside className={`drawer-panel ${drawerOpen ? 'open' : ''}`} aria-hidden={!drawerOpen}>
+            <div className="drawer-header">
+              <h2>Menu</h2>
+              <button onClick={() => setDrawerOpen(false)} aria-label="Fermer">✕</button>
+            </div>
+            <div className="drawer-content">
+              <section className="drawer-section">
+                <h3>📥 Gérer ma wishlist</h3>
+                <ExportImport wishlist={wishlist} onImport={handleImport} />
+                {wishlist.length > 0 && (
+                  <Share
+                    wishlist={wishlist}
+                    publicUrl={publicShareUrl}
+                    onPublish={publishPublicWishlist}
+                  />
+                )}
+              </section>
+              <Stats wishlist={filteredWishlist} />
+              <FriendsPanel currentUser={currentUser} onOpenProfile={profileLinkHandler} />
+            </div>
+          </aside>
+        </>
+      )}
 
       {selectedMedia && !isPublicView && (
         <MediaDetail

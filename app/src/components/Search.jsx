@@ -11,7 +11,7 @@ export default function Search({onAdd, onSelect}){
   const [error,setError] = useState('')
   const [genres, setGenres] = useState({})
   const [selectedGenre, setSelectedGenre] = useState('')
-  const [filtersOpen, setFiltersOpen] = useState(() => window.innerWidth > 768)
+  const [toolsOpen, setToolsOpen] = useState(() => window.innerWidth > 768)
   const apiKey = import.meta.env.VITE_TMDB_API_KEY || ''
   const lang = import.meta.env.VITE_TMDB_LANGUAGE || 'fr-FR'
 
@@ -35,7 +35,7 @@ export default function Search({onAdd, onSelect}){
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 769px)')
-    const handler = (e) => setFiltersOpen(e.matches)
+    const handler = (e) => setToolsOpen(e.matches)
     handler(media)
     media.addEventListener('change', handler)
     return () => media.removeEventListener('change', handler)
@@ -94,10 +94,19 @@ export default function Search({onAdd, onSelect}){
         <form className="search-top" onSubmit={(e)=>doSearch(e,1)}>
           <div className="search-input">
             <input placeholder="Rechercher un titre, un auteur..." value={q} onChange={e=>setQ(e.target.value)} />
-            <button className="search-submit" type="submit" aria-label="Rechercher">Rechercher</button>
+            <button className="search-submit" type="submit" aria-label="Rechercher">🔍</button>
+            <button
+              type="button"
+              className="search-filter-btn only-mobile"
+              onClick={() => setToolsOpen(o => !o)}
+              aria-expanded={toolsOpen}
+              aria-label="Filtres"
+            >
+              ⚙️
+            </button>
           </div>
         </form>
-        <div className="search-toolbar">
+        <div className={`search-toolbar ${toolsOpen ? 'open' : ''}`}>
           <div className="search-type only-desktop" role="tablist" aria-label="Type de recherche">
             <button
               type="button"
@@ -135,34 +144,14 @@ export default function Search({onAdd, onSelect}){
             <option value="book">📚 Livres</option>
           </select>
           {type!=='book' && (
-            <>
-              <div className="search-genre only-desktop">
-                <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)}>
-                  <option value="">-- Genre --</option>
-                  {Object.entries(genres).map(([id,name])=> (
-                    <option key={id} value={name}>{name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="search-genre only-mobile">
-                <button
-                  type="button"
-                  className="search-filters-toggle"
-                  onClick={() => setFiltersOpen(o => !o)}
-                  aria-expanded={filtersOpen}
-                >
-                  Genre {filtersOpen ? '▴' : '▾'}
-                </button>
-                {filtersOpen && (
-                  <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)}>
-                    <option value="">-- Genre --</option>
-                    {Object.entries(genres).map(([id,name])=> (
-                      <option key={id} value={name}>{name}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            </>
+            <div className="search-genre">
+              <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)}>
+                <option value="">-- Genre --</option>
+                {Object.entries(genres).map(([id,name])=> (
+                  <option key={id} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
           )}
         </div>
       </div>
