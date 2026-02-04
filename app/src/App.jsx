@@ -19,9 +19,6 @@ import PublicWishlistView from './components/PublicWishlistView'
 import PublicProfileView from './components/PublicProfileView'
 import ProfilePanel from './components/ProfilePanel'
 import FriendsPanel from './components/FriendsPanel'
-import { fetchTMDBDetails } from './api/tmdb'
-
-const CREATOR_REFRESH_KEY = 'ch_creator_refresh'
 
 const BASE_COLLECTIONS = [
   { id: 'default', label: 'Sans collection' },
@@ -63,15 +60,6 @@ function hexToRgb(hex) {
   }
 }
 
-function resolveCreatorFromDetails(details, type) {
-  if (!details) return ''
-  if (type === 'tv') {
-    if (details.created_by && details.created_by.length > 0) return details.created_by[0].name
-  }
-  const crew = details.credits?.crew || []
-  const director = crew.find(c => c.job === 'Director')
-  return director ? director.name : ''
-}
 
 export default function App(){
   const { currentUser, logout, getUserInitials } = useAuth()
@@ -86,9 +74,6 @@ export default function App(){
   const [userProfile, setUserProfile] = useState(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef(null)
-  const [refreshingCreators, setRefreshingCreators] = useState(false)
-  const [refreshProgress, setRefreshProgress] = useState({ total: 0, done: 0 })
-  const [refreshNote, setRefreshNote] = useState('')
 
   const initialHash = window.location.hash || ''
   const [hash, setHash] = useState(() => initialHash)
@@ -385,26 +370,7 @@ export default function App(){
 
   function addToWishlist(item){
     if (wishlist.find(i => i.id === item.id && i.type === item.type)) return
-    const baseItem = { ...item, collection: selectedCollection || 'default' }
-    if (baseItem.type === 'book' && !baseItem.creator && baseItem.authors?.length) {
-      baseItem.creator = baseItem.authors[0]
-    }
-    setWishlist(prev => [baseItem, ...prev])
-
-    if (!baseItem.creator && baseItem.type !== 'book') {
-      const apiKey = import.meta.env.VITE_TMDB_API_KEY
-      const lang = import.meta.env.VITE_TMDB_LANGUAGE || 'fr-FR'
-      if (!apiKey) return
-      fetchTMDBDetails(baseItem.id, baseItem.type, apiKey, lang)
-        .then(details => {
-          const creator = resolveCreatorFromDetails(details, baseItem.type)
-          if (!creator) return
-          setWishlist(prev => prev.map(i => (
-            i.id === baseItem.id && i.type === baseItem.type ? { ...i, creator } : i
-          )))
-        })
-        .catch(() => {})
-    }
+    setWishlist(prev => [{ ...item, collection: selectedCollection || 'default' }, ...prev])
   }
 
   function removeFromWishlist(id, type){
@@ -427,79 +393,6 @@ export default function App(){
     ))
   }
 
-  const creatorTargets = wishlist.filter(i => {
-    if (i.type === 'book') return i.authors?.length
-    return true
-  })
-  const creatorTargetsCount = creatorTargets.length
-  const missingCreatorsCount = wishlist.filter(i => {
-    if (i.type === 'book') return !i.creator && i.authors?.length
-    return !i.creator
-  }).length
-
-  async function refreshCreators() {
-    if (refreshingCreators) return
-    const targets = creatorTargets
-    if (targets.length === 0) {
-      setRefreshNote('Rien à mettre à jour.')
-      return
-    }
-    const apiKey = import.meta.env.VITE_TMDB_API_KEY
-    const lang = import.meta.env.VITE_TMDB_LANGUAGE || 'fr-FR'
-    if (targets.some(i => i.type !== 'book') && !apiKey) {
-      setRefreshNote('Clé TMDB manquante.')
-      return
-    }
-
-    setRefreshingCreators(true)
-    setRefreshNote('')
-    setRefreshProgress({ total: targets.length, done: 0 })
-
-    const updates = new Map()
-    let done = 0
-    for (const item of targets) {
-      if (item.type === 'book') {
-        const author = item.authors?.[0]
-        if (author) updates.set(`${item.type}:${item.id}`, author)
-      } else {
-        try {
-          const details = await fetchTMDBDetails(item.id, item.type, apiKey, lang)
-          const creator = resolveCreatorFromDetails(details, item.type)
-          if (creator) updates.set(`${item.type}:${item.id}`, creator)
-        } catch {}
-      }
-      done += 1
-      setRefreshProgress({ total: targets.length, done })
-      await new Promise(resolve => setTimeout(resolve, 120))
-    }
-
-    if (updates.size > 0) {
-      setWishlist(prev => prev.map(i => {
-        const key = `${i.type}:${i.id}`
-        return updates.has(key) ? { ...i, creator: updates.get(key) } : i
-      }))
-    }
-    try {
-      localStorage.setItem(CREATOR_REFRESH_KEY, String(Date.now()))
-    } catch {}
-    setRefreshingCreators(false)
-    setTimeout(() => setRefreshProgress({ total: 0, done: 0 }), 1600)
-  }
-
-  useEffect(() => {
-    if (isPublicView) return
-    if (!wishlistLoaded) return
-    const dayMs = 24 * 60 * 60 * 1000
-    const maybeRefresh = () => {
-      if (refreshingCreators) return
-      const last = parseInt(localStorage.getItem(CREATOR_REFRESH_KEY) || '0', 10)
-      if (Number.isFinite(last) && Date.now() - last < dayMs) return
-      refreshCreators()
-    }
-    maybeRefresh()
-    const timer = setInterval(maybeRefresh, 60 * 60 * 1000)
-    return () => clearInterval(timer)
-  }, [isPublicView, wishlistLoaded, wishlist.length, refreshingCreators])
 
   // Si l'utilisateur n'est pas connecté et qu'on n'est pas en vue publique, afficher Login/Register
   if (!currentUser && !isPublicView) {
@@ -513,7 +406,7 @@ export default function App(){
       <header>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.21</h1>
+            <h1 style={{margin:0,fontSize:22,fontWeight:700}}>🎬 culture hub V1.22</h1>
             <p style={{margin:'4px 0 0',fontSize:12,color:'var(--text-secondary)'}}>Films, séries & livres</p>
           </div>
           <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -644,19 +537,6 @@ export default function App(){
                   onPublish={publishPublicWishlist}
                 />
               )}
-              <div className="creator-refresh">
-                <div className="creator-refresh-head">
-                  <h3>🎬 Réalisateurs & auteurs</h3>
-                  <small>{creatorTargetsCount} total • {missingCreatorsCount} manquant{missingCreatorsCount > 1 ? 's' : ''}</small>
-                </div>
-                <small>Actualisation automatique toutes les 24h (sans action).</small>
-                {refreshProgress.total > 0 && (
-                  <div className="creator-refresh-progress">
-                    Mise à jour {refreshProgress.done}/{refreshProgress.total}
-                  </div>
-                )}
-                {refreshNote && <div className="creator-refresh-progress">{refreshNote}</div>}
-              </div>
             </section>
           )}
           {!isPublicView && currentUser && (

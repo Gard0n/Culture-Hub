@@ -11,6 +11,7 @@ export default function Search({onAdd, onSelect}){
   const [error,setError] = useState('')
   const [genres, setGenres] = useState({})
   const [selectedGenre, setSelectedGenre] = useState('')
+  const [filtersOpen, setFiltersOpen] = useState(() => window.innerWidth > 768)
   const apiKey = import.meta.env.VITE_TMDB_API_KEY || ''
   const lang = import.meta.env.VITE_TMDB_LANGUAGE || 'fr-FR'
 
@@ -31,6 +32,14 @@ export default function Search({onAdd, onSelect}){
     }
     loadGenres()
   },[type])
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 769px)')
+    const handler = (e) => setFiltersOpen(e.matches)
+    handler(media)
+    media.addEventListener('change', handler)
+    return () => media.removeEventListener('change', handler)
+  }, [])
 
   async function doSearch(e, pageArg=1){
     e && e.preventDefault()
@@ -82,12 +91,14 @@ export default function Search({onAdd, onSelect}){
   return (
     <section className="search">
       <div className="search-panel">
-        <div className="search-header">
-          <div>
-            <h2>🔎 Recherche</h2>
-            <p>Films, séries & livres</p>
+        <form className="search-top" onSubmit={(e)=>doSearch(e,1)}>
+          <div className="search-input">
+            <input placeholder="Rechercher un titre, un auteur..." value={q} onChange={e=>setQ(e.target.value)} />
+            <button className="search-submit" type="submit" aria-label="Rechercher">Rechercher</button>
           </div>
-          <div className="search-type" role="tablist" aria-label="Type de recherche">
+        </form>
+        <div className="search-toolbar">
+          <div className="search-type only-desktop" role="tablist" aria-label="Type de recherche">
             <button
               type="button"
               className={type === 'movie' ? 'active' : ''}
@@ -113,14 +124,19 @@ export default function Search({onAdd, onSelect}){
               📚 Livres
             </button>
           </div>
-        </div>
-        <form className="search-form" onSubmit={(e)=>doSearch(e,1)}>
-          <div className="search-row">
-            <div className="search-field search-grow">
-              <input placeholder="Rechercher un titre, un auteur..." value={q} onChange={e=>setQ(e.target.value)} />
-            </div>
-            {type!=='book' && (
-              <div className="search-field">
+          <select
+            className="search-type-select only-mobile"
+            value={type}
+            onChange={e=>handleTypeChange(e.target.value)}
+            aria-label="Type"
+          >
+            <option value="movie">🎬 Films</option>
+            <option value="tv">📺 Séries</option>
+            <option value="book">📚 Livres</option>
+          </select>
+          {type!=='book' && (
+            <>
+              <div className="search-genre only-desktop">
                 <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)}>
                   <option value="">-- Genre --</option>
                   {Object.entries(genres).map(([id,name])=> (
@@ -128,10 +144,27 @@ export default function Search({onAdd, onSelect}){
                   ))}
                 </select>
               </div>
-            )}
-            <button className="search-submit" type="submit">Rechercher</button>
-          </div>
-        </form>
+              <div className="search-genre only-mobile">
+                <button
+                  type="button"
+                  className="search-filters-toggle"
+                  onClick={() => setFiltersOpen(o => !o)}
+                  aria-expanded={filtersOpen}
+                >
+                  Genre {filtersOpen ? '▴' : '▾'}
+                </button>
+                {filtersOpen && (
+                  <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)}>
+                    <option value="">-- Genre --</option>
+                    {Object.entries(genres).map(([id,name])=> (
+                      <option key={id} value={name}>{name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
           {loading ? (
             <ul className="results">

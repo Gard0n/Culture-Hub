@@ -62,7 +62,7 @@ export default function Upcoming({ onSelect, onAdd }) {
               <div className="media-card-info">
                 <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>{it.title || it.name}</strong>
                 <small style={{ color: 'var(--text-light)' }}>
-                  {it.creator || 'Réalisateur inconnu'}
+                  {(it.release_date || it.first_air_date || '').slice(0, 4)}
                 </small>
               </div>
               <div className="media-card-actions mobile-hide" style={{ marginTop: 8 }}>

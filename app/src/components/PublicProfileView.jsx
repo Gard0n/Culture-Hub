@@ -108,7 +108,7 @@ export default function PublicProfileView({ profile, wishlist, loading, error, o
                         {item.title}
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text-light)', marginBottom: 8 }}>
-                        {item.creator || (item.type === 'book' ? (item.authors?.[0] || 'Auteur inconnu') : 'Réalisateur inconnu')}
+                        {item.year || ''}
                       </div>
                     </div>
                   </div>

@@ -43,9 +43,7 @@ export default function Wishlist({items,onRemove,onSelect,onUpdateNote,onUpdateC
               )}
               <div style={{flex:1}}>
                 <strong style={{display:'block',color:'var(--text-primary)'}}>{i.title}</strong>
-                <small style={{color:'var(--text-light)'}}>
-                  {i.creator || (i.type === 'book' ? (i.authors?.[0] || 'Auteur inconnu') : 'Réalisateur inconnu')}
-                </small>
+                <small style={{color:'var(--text-light)'}}>{i.year}</small>
                 {!isPublic && (
                   <div style={{fontSize:10,color:'var(--accent)',marginTop:4}}>
                     📁 {resolveCollectionLabel(i.collection || 'default')}

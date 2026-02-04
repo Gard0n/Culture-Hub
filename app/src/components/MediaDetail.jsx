@@ -37,27 +37,12 @@ export default function MediaDetail({media, onClose, onAdd, onUpdateNote, existi
   }, [existingItem, media?.id, media?.type])
 
   const poster = details?.poster_path || details?.poster || media.poster
-  const creatorName = (() => {
-    if (media.type === 'book') {
-      return (media.authors && media.authors.length > 0) ? media.authors[0] : ''
-    }
-    if (media.type === 'tv') {
-      if (details?.created_by && details.created_by.length > 0) return details.created_by[0].name
-    }
-    if (details?.credits?.crew) {
-      const director = details.credits.crew.find(c => c.job === 'Director')
-      if (director) return director.name
-    }
-    return ''
-  })()
-
   const baseItem = {
     id: media.id,
     type: media.type,
     title: media.title || media.name,
     year: (media.year || media.release_date || '').slice(0,4),
-    poster,
-    creator: creatorName
+    poster
   }
   const isInWishlist = Boolean(existingItem)
 
